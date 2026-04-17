@@ -2,10 +2,14 @@
   "type": "excalidraw",
   "version": 2,
 <<<<<<< HEAD
+<<<<<<< HEAD
   "source": "https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor",
 =======
   "source": "https://excalidraw.com",
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+  "source": "https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor",
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
   "elements": [
     {
       "id": "5kZ5ckYCPN_2fs1SkyZXK",
@@ -46,12 +50,17 @@
       "id": "m2n9Z9rWYmOjpw5RFTuhz",
       "type": "image",
 <<<<<<< HEAD
+<<<<<<< HEAD
       "x": 823.5735402932032,
       "y": -971.7959779441513,
 =======
       "x": 827.5735402932032,
       "y": -969.7959779441513,
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+      "x": 823.5735402932032,
+      "y": -971.7959779441513,
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "width": 1083.9711769623946,
       "height": 685.009563219291,
       "angle": 0,
@@ -68,6 +77,7 @@
       "roundness": null,
       "seed": 1841862262,
 <<<<<<< HEAD
+<<<<<<< HEAD
       "version": 490,
       "versionNonce": 755345596,
       "isDeleted": false,
@@ -80,6 +90,13 @@
       "boundElements": [],
       "updated": 1773881671884,
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+      "version": 490,
+      "versionNonce": 755345596,
+      "isDeleted": false,
+      "boundElements": [],
+      "updated": 1773883446479,
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "link": null,
       "locked": false,
       "status": "saved",
@@ -91,6 +108,7 @@
       "crop": null
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
       "id": "o1ywbvOQaVjFw6HDEPDEC",
@@ -131,6 +149,8 @@
     },
     {
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "id": "EPEsNnUKGlxJTM75u98ch",
       "type": "text",
       "x": -1065.0150931521503,
@@ -168,6 +188,7 @@
       "lineHeight": 1.25
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
       "id": "hbEmnej-iwpfzbclJQj5E",
@@ -251,6 +272,8 @@
     },
     {
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "id": "3V7Mzeo1XPkvqCREPeDPw",
       "type": "text",
       "x": -334.2972287601987,
@@ -326,6 +349,7 @@
     },
     {
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
       "id": "pjFjsS9pve7IrRgWJzBks",
       "type": "text",
@@ -365,6 +389,8 @@
     },
     {
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "id": "V_n8X4Rz__MTO2j24sfCs",
       "type": "text",
       "x": 386.2029020764134,
@@ -402,6 +428,7 @@
       "lineHeight": 1.25
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
       "id": "qPkM_0Bu9sg96eC_vn6eG",
@@ -482,6 +509,8 @@
     },
     {
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "id": "d1SfU4D9awAB-96bEwGlO",
       "type": "text",
       "x": -696.6342742350633,
@@ -519,6 +548,7 @@
       "lineHeight": 1.25
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
       "id": "ZPboJFVzzsCf3vyc_sWfG",
@@ -559,6 +589,8 @@
     },
     {
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "id": "8RHIM4OdWzZrjAanLVwWp",
       "type": "text",
       "x": -1072.4905523930786,
@@ -693,10 +725,14 @@
       "versionNonce": 519656618,
       "isDeleted": false,
 <<<<<<< HEAD
+<<<<<<< HEAD
       "boundElements": [],
 =======
       "boundElements": null,
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+      "boundElements": [],
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "updated": 1773881206574,
       "link": null,
       "locked": false,
@@ -734,10 +770,14 @@
       "versionNonce": 734501174,
       "isDeleted": false,
 <<<<<<< HEAD
+<<<<<<< HEAD
       "boundElements": [],
 =======
       "boundElements": null,
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+      "boundElements": [],
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "updated": 1773881988307,
       "link": null,
       "locked": false,
@@ -752,6 +792,7 @@
       "lineHeight": 1.25
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
       "id": "eHhcpitON_HrLUpl1Y725",
@@ -879,6 +920,8 @@
     },
     {
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "id": "JuS6dN37JUIQeB-yJwCXF",
       "type": "text",
       "x": -31.481038947172124,
@@ -902,10 +945,14 @@
       "versionNonce": 1359201130,
       "isDeleted": false,
 <<<<<<< HEAD
+<<<<<<< HEAD
       "boundElements": [],
 =======
       "boundElements": null,
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+      "boundElements": [],
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "updated": 1773881944824,
       "link": null,
       "locked": false,
@@ -957,6 +1004,7 @@
       "lineHeight": 1.25
     },
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
       "id": "kNQYBpjwouhR61iPX_vcq",
@@ -1342,6 +1390,8 @@
     },
     {
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "id": "C3h8W79RIlWAyOB2AVHKA",
       "type": "text",
       "x": 374.5397819811822,
@@ -1365,10 +1415,14 @@
       "versionNonce": 1055269302,
       "isDeleted": false,
 <<<<<<< HEAD
+<<<<<<< HEAD
       "boundElements": [],
 =======
       "boundElements": null,
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+      "boundElements": [],
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
       "updated": 1773882445210,
       "link": null,
       "locked": false,
@@ -1382,6 +1436,9 @@
       "autoResize": false,
       "lineHeight": 1.25
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
     },
     {
       "id": "wUDNPc4dFZEhpv4DZUS3n",
@@ -1530,8 +1587,11 @@
       "originalText": "1",
       "autoResize": true,
       "lineHeight": 1.25
+<<<<<<< HEAD
 =======
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
     }
   ],
   "appState": {
@@ -1539,11 +1599,15 @@
     "gridStep": 5,
     "gridModeEnabled": false,
 <<<<<<< HEAD
+<<<<<<< HEAD
     "viewBackgroundColor": "#ffffff"
 =======
     "viewBackgroundColor": "#ffffff",
     "lockedMultiSelections": {}
 >>>>>>> d17770f (Add MLCanvas.excalidraw)
+=======
+    "viewBackgroundColor": "#ffffff"
+>>>>>>> 39d4798 (feat(churn): adiciona notebook de modelagem MLP com PyTorch e MLflow)
   },
   "files": {
     "066da9aa25e8e6fa570cdeb94c63182d48dbf8ef": {
