@@ -5,7 +5,12 @@
 __pycache__
 .ipynb_checkpoints
 notebooks/.ipynb_checkpoints
+<<<<<<< HEAD
 
 .superpowers
 
 mlruns
+=======
+notebooks/mlruns/*
+mlruns/*
+>>>>>>> 0a11da0 (chore(git): ignorar diretório de artefatos do mlflow)
