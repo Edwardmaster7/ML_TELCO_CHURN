@@ -1,0 +1,23 @@
+artifact_path: file:C:/Users/vkenj/OneDrive/Documentos/Fiap/ML_TELCO_CHURN/notebooks/mlruns/1/models/m-de00ec222ccf406cafcacadf8cdcf54a/artifacts
+flavors:
+  python_function:
+    config:
+      device: null
+    data: data
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pytorch
+    pickle_module_name: mlflow.pytorch.pickle_module
+    python_version: 3.13.13
+  pytorch:
+    code: null
+    model_data: data
+    pytorch_version: 2.11.0+cpu
+mlflow_version: 3.10.1
+model_id: m-de00ec222ccf406cafcacadf8cdcf54a
+model_size_bytes: 63139
+model_uuid: m-de00ec222ccf406cafcacadf8cdcf54a
+prompts: null
+run_id: 8eae15b7a1e94bc4863a5507a7479942
+utc_time_created: '2026-04-16 18:33:16.538440'
