@@ -34,7 +34,7 @@ class ProjectConfig:
 
     # Tracking
     mlflow_tracking_uri: str = "http://127.0.0.1:5000"
-    mlflow_experiment_name: str = "telco_churn_models_src"
+    mlflow_experiment_name: str = "03_Refactor_Src"
 
 # Instância global para uso nos scripts (pode ser injetada em funções p/ SOLID)
 CONFIG = ProjectConfig()
