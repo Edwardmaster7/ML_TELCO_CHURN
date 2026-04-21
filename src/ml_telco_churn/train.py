@@ -9,6 +9,7 @@ import mlflow
 import mlflow.sklearn
 import mlflow.pytorch
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -84,7 +85,33 @@ def main():
         optimizer.step()
     logger.info("Treinamento finalizado.")
 
-    # 5. MLflow Tracking (SQLite backend)
+    # 5. Avaliação no Conjunto de Teste
+    logger.info("Avaliando modelo no conjunto de teste...")
+    model.eval()
+
+    # Prepara os dados de teste em tensores
+    X_test_t = torch.tensor(X_test_proc, dtype=torch.float32)
+    y_test_t = torch.tensor(y_test, dtype=torch.float32)
+
+    with torch.no_grad():
+        test_outputs = model(X_test_t)
+        # Calcula as probabilidades com sigmoid
+        test_probs = torch.sigmoid(test_outputs).numpy()
+        # Predições hard com threshold 0.5
+        test_preds = (test_probs >= 0.5).astype(int)
+
+    # Calcula as métricas
+    y_test_np = y_test_t.numpy()
+
+    accuracy = accuracy_score(y_test_np, test_preds)
+    precision = precision_score(y_test_np, test_preds, zero_division=0)
+    recall = recall_score(y_test_np, test_preds, zero_division=0)
+    f1 = f1_score(y_test_np, test_preds, zero_division=0)
+    roc_auc = roc_auc_score(y_test_np, test_probs)
+
+    logger.info(f"Métricas no Teste -> Accuracy: {accuracy:.4f} | Precision: {precision:.4f} | Recall: {recall:.4f} | F1: {f1:.4f} | ROC AUC: {roc_auc:.4f}")
+
+    # 6. MLflow Tracking (SQLite backend)
     # Importante: Como usaremos http://127.0.0.1:5000, o MLflow UI precisa estar rodando
     # com o comando: mlflow ui --backend-store-uri sqlite:///mlflow.db
     mlflow.set_tracking_uri(CONFIG.mlflow_tracking_uri)
@@ -115,8 +142,19 @@ def main():
             pip_requirements=["torch==2.11.0"]
         )
 
+        # Log de parâmetros e métricas
         mlflow.log_param("epochs", args.epochs)
-        logger.info("Modelos registrados no MLflow.")
+
+        metrics_dict = {
+            "test_accuracy": accuracy,
+            "test_precision": precision,
+            "test_recall": recall,
+            "test_f1": f1,
+            "test_roc_auc": roc_auc
+        }
+        mlflow.log_metrics(metrics_dict)
+
+        logger.info("Modelos e métricas registrados no MLflow.")
 
 if __name__ == "__main__":
     main()
