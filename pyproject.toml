@@ -9,6 +9,7 @@ dependencies = [
     "mlflow>=3.10.1",
     "numpy>=2.4.3",
     "optuna>=4.8.0",
+    "optuna-integration[mlflow]>=4.8.0",
     "pandas>=2.3.3",
     "pydantic>=2.12.5",
     "scikit-learn>=1.8.0",
