@@ -60,5 +60,4 @@ def get_preprocessor(cat_features: list[str], num_features: list[str], available
 
 def prepare_target(y_series: pd.Series) -> np.ndarray:
     """Converte 'Yes'/'No' para 1/0."""
-    target_series = (y_series.astype(str).str.strip().str.lower() == 'yes').astype(np.int64)
-    return target_series.to_numpy(dtype=np.int64)
+    return (y_series.astype(str).str.strip().str.lower() == 'yes').astype(int).values
