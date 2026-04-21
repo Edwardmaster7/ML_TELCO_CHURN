@@ -4,17 +4,73 @@
 
 **Goal:** Modularizar os notebooks de Data Science em scripts Python puros para o treinamento e salvar os artefatos de modelo via MLflow.
 
-**Architecture:** A estrutura `src/` será composta de módulos independentes (`data.py`, `features.py` e `train.py`). Os scripts encapsularão os fluxos do pandas, scikit-learn pipelines e a rede MLP do PyTorch de forma estruturada.
+**Architecture:** A estrutura `src/` será composta de módulos independentes (`config.py`, `data.py`, `features.py` e `train.py`). O `config.py` centralizará todas as constantes seguindo princípios SOLID (separação de responsabilidades e injeção de dependências onde possível). Os scripts encapsularão os fluxos do pandas, scikit-learn pipelines e a rede MLP do PyTorch de forma estruturada.
 
 **Tech Stack:** Python 3.13, Pandas, Scikit-learn, PyTorch, MLflow.
 
 ---
 
-### Task 1: Setup da Estrutura de Pastas e Módulo de Dados
+### Task 1: Setup da Estrutura de Pastas e Constantes (Clean Code)
+
+**Files:**
+- Create: `src/ml_telco_churn/config.py`
+- Create: `src/ml_telco_churn/__init__.py`
+
+- [ ] **Step 1: Criar o arquivo de configurações centralizadas**
+```python
+# src/ml_telco_churn/config.py
+"""Configurações e constantes globais do projeto."""
+
+from dataclasses import dataclass, field
+from typing import List
+
+@dataclass
+class ProjectConfig:
+    # Seeds
+    random_state: int = 42
+
+    # Arquitetura MLP
+    mlp_hidden_dims: List[int] = field(default_factory=lambda: [64, 32])
+    mlp_dropout_rate: float = 0.3
+
+    # Treinamento
+    epochs: int = 10
+    batch_size: int = 256
+    learning_rate: float = 1e-3
+
+    # Features e Colunas Target (minúsculo para consistência de case treatment)
+    target_col: str = "churn"
+    id_col: str = "customerid"
+
+    # Features Lists
+    num_features: List[str] = field(default_factory=lambda: [
+        'tenure', 'MonthlyCharges', 'TotalCharges'
+    ])
+    cat_features: List[str] = field(default_factory=lambda: [
+        'gender', 'Partner', 'Dependents', 'PhoneService', 'MultipleLines',
+        'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
+        'TechSupport', 'StreamingTV', 'StreamingMovies', 'Contract',
+        'PaperlessBilling', 'PaymentMethod'
+    ])
+
+    # Tracking
+    mlflow_tracking_uri: str = "http://127.0.0.1:5000"
+    mlflow_experiment_name: str = "telco_churn_models_src"
+
+# Instância global para uso nos scripts (pode ser injetada em funções p/ SOLID)
+CONFIG = ProjectConfig()
+```
+
+- [ ] **Step 2: Commit do Módulo de Configuração**
+```bash
+git add src/ml_telco_churn/
+git commit -m "feat: cria estrutura e configurações base centralizadas"
+```
+
+### Task 1.1: Módulo de Dados
 
 **Files:**
 - Create: `src/ml_telco_churn/data.py`
-- Create: `src/ml_telco_churn/__init__.py`
 
 - [ ] **Step 1: Criar a estrutura base e escrever a função de carregamento**
 ```python
@@ -52,8 +108,8 @@ def load_and_merge_data(
 
 - [ ] **Step 2: Commit da estrutura de dados**
 ```bash
-git add src/ml_telco_churn/
-git commit -m "feat: cria estrutura do pacote e função de carga de dados"
+git add src/ml_telco_churn/data.py
+git commit -m "feat: cria módulo de carregamento de dados"
 ```
 
 ### Task 2: Implementar Feature Engineering e Pipeline do Scikit-Learn
@@ -72,53 +128,61 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Aplica limpezas básicas (cast de tipos, dropna) antes do pipeline."""
+    """Aplica limpezas básicas (cast de tipos, dropna) e padroniza nomes."""
     df_clean = df.copy()
-    df_clean['TotalCharges'] = pd.to_numeric(df_clean['TotalCharges'], errors='coerce')
-    df_clean.dropna(subset=['TotalCharges'], inplace=True)
+
+    # Tratamento de case: padroniza nomes das colunas (lowercase, sem espaços)
+    df_clean.columns = df_clean.columns.str.strip().str.lower()
+
+    if 'totalcharges' in df_clean.columns:
+        df_clean['totalcharges'] = pd.to_numeric(df_clean['totalcharges'], errors='coerce')
+        df_clean.dropna(subset=['totalcharges'], inplace=True)
+
     return df_clean
 
-def get_preprocessor() -> ColumnTransformer:
-    """Retorna o ColumnTransformer com as pipelines de imputação e escala/encoder."""
-    num_features = ['tenure', 'MonthlyCharges', 'TotalCharges']
-    # Não incluindo 'customerID', e ignorando a target 'Churn'
-    
+def get_preprocessor(cat_features: list[str], num_features: list[str], available_columns: list[str]) -> ColumnTransformer:
+    """Retorna o ColumnTransformer com validação rigorosa das features injetadas."""
+    if not cat_features or not num_features:
+        raise ValueError("As listas de features categóricas e numéricas não podem ser vazias ou nulas.")
+
+    # Tratamento de case nas features injetadas
+    cat_features_clean = [f.strip().lower() for f in cat_features]
+    num_features_clean = [f.strip().lower() for f in num_features]
+    available_clean = [f.strip().lower() for f in available_columns]
+
+    # Validação: Verifica se as features injetadas existem no dataset
+    all_injected = set(cat_features_clean + num_features_clean)
+    missing_cols = all_injected - set(available_clean)
+
+    if missing_cols:
+        raise ValueError(f"As seguintes features injetadas não foram encontradas no dataset: {missing_cols}")
+
     # Numérico
     num_pipe = Pipeline([
         ("imputer", SimpleImputer(strategy="median")),
         ("scaler",  StandardScaler()),
     ])
-    
-    # Categórico (excluindo os já tratados e identificadores)
+
+    # Categórico
     cat_pipe = Pipeline([
         ("imputer", SimpleImputer(strategy="most_frequent")),
         ("encoder", OneHotEncoder(drop="first", handle_unknown="ignore", sparse_output=False)),
     ])
-    
-    # Categoria de Features
-    # Note: Em um caso real teríamos uma função passando as listas baseadas nas colunas reais.
-    # Esta é a simplificação estrutural inicial baseada no notebook EDA.
-    cat_features = [
-        'gender', 'Partner', 'Dependents', 'PhoneService', 'MultipleLines',
-        'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
-        'TechSupport', 'StreamingTV', 'StreamingMovies', 'Contract',
-        'PaperlessBilling', 'PaymentMethod'
-    ]
-    
+
     preprocessor = ColumnTransformer(
         transformers=[
-            ("num", num_pipe, num_features),
-            ("cat", cat_pipe, cat_features),
+            ("num", num_pipe, num_features_clean),
+            ("cat", cat_pipe, cat_features_clean),
         ],
         remainder="passthrough",
         verbose_feature_names_out=False,
     )
-    
+
     return preprocessor
 
 def prepare_target(y_series: pd.Series) -> np.ndarray:
     """Converte 'Yes'/'No' para 1/0."""
-    return (y_series == 'Yes').astype(int).values
+    return (y_series.astype(str).str.strip().str.lower() == 'yes').astype(int).values
 ```
 
 - [ ] **Step 2: Commit do Módulo Features**
@@ -193,6 +257,7 @@ import mlflow.pytorch
 from sklearn.model_selection import train_test_split
 
 # Imports locais (depende de como o pacote foi construído, mas assumindo rodar via sys path)
+from src.ml_telco_churn.config import CONFIG
 from src.ml_telco_churn.data import load_and_merge_data
 from src.ml_telco_churn.features import clean_data, get_preprocessor, prepare_target
 from src.ml_telco_churn.model_nn import ChurnMLP
@@ -211,17 +276,21 @@ def main():
     # 1. Carregamento
     df_raw = load_and_merge_data(args.customers, args.services, args.contracts)
     df_clean = clean_data(df_raw)
-    
-    X = df_clean.drop(columns=['Churn', 'customerID'])
-    y = prepare_target(df_clean['Churn'])
-    
+
+    X = df_clean.drop(columns=[CONFIG.target_col, CONFIG.id_col], errors='ignore')
+    y = prepare_target(df_clean[CONFIG.target_col])
+
     # 2. Split
     X_train_raw, X_test_raw, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+        X, y, test_size=0.2, random_state=CONFIG.random_state, stratify=y
     )
-    
+
     # 3. Preprocessamento (Fit no Treino, Transform no Teste)
-    preprocessor = get_preprocessor()
+    preprocessor = get_preprocessor(
+        cat_features=CONFIG.cat_features,
+        num_features=CONFIG.num_features,
+        available_columns=X_train_raw.columns.tolist()
+    )
     X_train_proc = preprocessor.fit_transform(X_train_raw)
     X_test_proc = preprocessor.transform(X_test_raw)
     
@@ -231,14 +300,20 @@ def main():
     
     # 4. Treinamento da Rede
     input_dim = X_train_t.shape[1]
-    model = ChurnMLP(input_dim=input_dim, hidden_dims=[64, 32], dropout_rate=0.3)
+    model = ChurnMLP(
+        input_dim=input_dim, 
+        hidden_dims=CONFIG.mlp_hidden_dims, 
+        dropout_rate=CONFIG.mlp_dropout_rate
+    )
     
     criterion = nn.BCEWithLogitsLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = optim.Adam(model.parameters(), lr=CONFIG.learning_rate)
     
     logger.info("Iniciando treinamento PyTorch...")
     model.train()
-    for epoch in range(args.epochs):
+    
+    epochs_to_run = args.epochs if args.epochs != 10 else CONFIG.epochs
+    for epoch in range(epochs_to_run):
         optimizer.zero_grad()
         outputs = model(X_train_t)
         loss = criterion(outputs, y_train_t)
@@ -247,8 +322,8 @@ def main():
     logger.info("Treinamento finalizado.")
     
     # 5. MLflow Tracking
-    mlflow.set_tracking_uri("file:./mlruns")
-    mlflow.set_experiment("telco_churn_models_src")
+    mlflow.set_tracking_uri(CONFIG.mlflow_tracking_uri)
+    mlflow.set_experiment(CONFIG.mlflow_experiment_name)
     
     with mlflow.start_run(run_name="mlp_pytorch_refactored"):
         # Log artifacts (A decisão principal da arquitetura)
