@@ -10,10 +10,10 @@ import mlflow.pytorch
 from sklearn.model_selection import train_test_split
 
 # Imports locais (depende de como o pacote foi construído, mas assumindo rodar via sys path)
-from src.ml_telco_churn.config import CONFIG
-from src.ml_telco_churn.data import load_and_merge_data
-from src.ml_telco_churn.features import clean_data, get_preprocessor, prepare_target
-from src.ml_telco_churn.model_nn import ChurnMLP
+from ml_telco_churn.config import CONFIG
+from ml_telco_churn.data import load_and_merge_data
+from ml_telco_churn.features import clean_data, get_preprocessor, prepare_target
+from ml_telco_churn.model_nn import ChurnMLP
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
