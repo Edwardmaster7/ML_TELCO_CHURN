@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
+import logging
 from sklearn.compose import ColumnTransformer
+
+logger = logging.getLogger(__name__)
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -21,6 +24,7 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 def get_preprocessor(cat_features: list[str], num_features: list[str], available_columns: list[str]) -> ColumnTransformer:
     """Retorna o ColumnTransformer com validação rigorosa das features injetadas."""
     if not cat_features or not num_features:
+        logger.error("Tentativa de inicializar preprocessor com lista de features nula ou vazia.")
         raise ValueError("As listas de features categóricas e numéricas não podem ser vazias ou nulas.")
 
     # Tratamento de case nas features injetadas
@@ -33,6 +37,7 @@ def get_preprocessor(cat_features: list[str], num_features: list[str], available
     missing_cols = all_injected - set(available_clean)
 
     if missing_cols:
+        logger.error(f"Features injetadas não encontradas no dataset (Possível Data Leakage ou Desalinhamento): {missing_cols}")
         raise ValueError(f"As seguintes features injetadas não foram encontradas no dataset: {missing_cols}")
 
     # Numérico
