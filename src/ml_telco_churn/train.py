@@ -1,4 +1,5 @@
 # src/ml_telco_churn/train.py
+import os
 import argparse
 import logging
 import torch
@@ -8,6 +9,9 @@ import mlflow
 import mlflow.sklearn
 import mlflow.pytorch
 from sklearn.model_selection import train_test_split
+
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 # Imports locais (depende de como o pacote foi construído, mas assumindo rodar via sys path)
 from ml_telco_churn.config import CONFIG
@@ -19,6 +23,12 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
 
 def main():
+    # Desativa log de variáveis de ambiente do MLFlow para limpar output
+    os.environ["MLFLOW_RECORD_ENV_VARS_IN_MODEL_LOGGING"] = "false"
+
+    # Oculta mensagens específicas de aviso do MLFlow nativo
+    logging.getLogger("mlflow").setLevel(logging.ERROR)
+
     parser = argparse.ArgumentParser(description="Treina o modelo de Churn.")
     parser.add_argument("--customers", default="data/raw/churn_customers.csv")
     parser.add_argument("--services", default="data/raw/churn_services.csv")
@@ -80,13 +90,17 @@ def main():
     mlflow.set_tracking_uri(CONFIG.mlflow_tracking_uri)
     mlflow.set_experiment(CONFIG.mlflow_experiment_name)
 
+    # Adiciona requirements manualmente para evitar warning de inferência do skops
+    pip_reqs = ["scikit-learn==1.8.0", "skops==0.13.0"]
+
     with mlflow.start_run(run_name="mlp_pytorch_refactored"):
         # Log artifacts (A decisão principal da arquitetura)
         mlflow.sklearn.log_model(
             sk_model=preprocessor,
             name="preprocessor",
             serialization_format="skops",
-            skops_trusted_types=["numpy.dtype", "numpy.float64"]
+            skops_trusted_types=["numpy.dtype", "numpy.float64"],
+            pip_requirements=pip_reqs
         )
 
         # Converte um pequeno batch de teste para numpy array como input_example (para inferir a assinatura)
@@ -97,7 +111,8 @@ def main():
         mlflow.pytorch.log_model(
             pytorch_model=model,
             name="pytorch_model",
-            input_example=input_example
+            input_example=input_example,
+            pip_requirements=["torch==2.11.0"]
         )
 
         mlflow.log_param("epochs", args.epochs)
