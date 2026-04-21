@@ -82,8 +82,23 @@ def main():
 
     with mlflow.start_run(run_name="mlp_pytorch_refactored"):
         # Log artifacts (A decisão principal da arquitetura)
-        mlflow.sklearn.log_model(preprocessor, "preprocessor")
-        mlflow.pytorch.log_model(model, "pytorch_model")
+        mlflow.sklearn.log_model(
+            sk_model=preprocessor,
+            name="preprocessor",
+            serialization_format="skops",
+            skops_trusted_types=["numpy.dtype", "numpy.float64"]
+        )
+
+        # Converte um pequeno batch de teste para numpy array como input_example (para inferir a assinatura)
+        # Mais de um exemplo (batch size > 1) é importante para camadas de BatchNorm.
+        # Usa float32 padrão para evitar erro de mat1 e mat2 types no PyTorch.
+        input_example = X_train_t[0:5].numpy()
+
+        mlflow.pytorch.log_model(
+            pytorch_model=model,
+            name="pytorch_model",
+            input_example=input_example
+        )
 
         mlflow.log_param("epochs", args.epochs)
         logger.info("Modelos registrados no MLflow.")
