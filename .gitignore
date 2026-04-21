@@ -13,4 +13,9 @@ mlruns
 =======
 notebooks/mlruns/*
 mlruns/*
+<<<<<<< HEAD
 >>>>>>> 0a11da0 (chore(git): ignorar diretório de artefatos do mlflow)
+=======
+
+.superpowers
+>>>>>>> c9b1f42 (chore(git): ignorar diretório .superpowers)
