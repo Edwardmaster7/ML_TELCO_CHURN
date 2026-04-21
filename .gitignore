@@ -7,5 +7,7 @@ __pycache__
 notebooks/.ipynb_checkpoints
 notebooks/mlruns/*
 mlruns/*
+mlartifacts
 
 .superpowers
+.worktrees/
