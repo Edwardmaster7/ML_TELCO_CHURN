@@ -1,214 +1,150 @@
-# 📱 Previsão de churn em empresa telco com Machine Learning
+# 📱 Previsão de Churn em Empresa Telco com Machine Learning
 
-Projeto de **Machine Learning End-to-End** para previsão de churn em empresa de telecom utilizando dados estruturados do mercado automotivo.
+Projeto de **Machine Learning End-to-End** para previsão de churn em empresa de telecom utilizando dados da base IBM Telco Customer Churn.
 
-O objetivo é construir um **pipeline profissional de ML**, desde a exploração dos dados até a disponibilização do modelo via **API**, seguindo boas práticas de engenharia de Machine Learning.
-
----
-
-# 🎯 Problema de Negócio
-
-Em Construção
+O objetivo é construir um **pipeline profissional de ML**, desde a exploração dos dados até a disponibilização do modelo via **API**, seguindo boas práticas de engenharia de Machine Learning, princípios SOLID e integração com MLOps (MLflow).
 
 ---
 
-# 🧠 Objetivo do Modelo
+## 🎯 Problema de Negócio
 
-Prever a variável:
+Empresas de telecomunicação enfrentam o desafio constante de retenção de clientes. O "Churn" (taxa de cancelamento) tem impacto direto na receita e no Customer Lifetime Value (CLV).
 
-**CHURN**
-
-Onde:
-
-Em Construção
-
-A variável é derivada da coluna original do dataset:
-
-```
-churn
-```
+Reter um cliente existente geralmente é muito mais barato do que adquirir um novo. Este projeto visa antecipar quais clientes têm alta probabilidade de cancelamento de contrato, permitindo que a equipe de marketing ou CS aja de forma proativa (ex: ofertas direcionadas).
 
 ---
 
-# 🏗 Arquitetura do Projeto
+## 🧠 Objetivo do Modelo
 
-Este projeto segue uma arquitetura de **Machine Learning modular**, separando responsabilidades em diferentes camadas.
+Prever a variável **CHURN**, classificando os clientes propensos a cancelar o serviço.
 
-Fluxo do pipeline:
+- **Classe 0 (No):** Cliente continua ativo
+- **Classe 1 (Yes):** Cliente propenso a dar Churn
 
-```
-Dados → EDA → Feature Engineering → Baselines → Rede Neural (MLP) → API → Deploy
-```
+A otimização foca num trade-off de negócio usando **Cost-Sensitive Learning**: onde um falso negativo (perder um cliente) custa muito mais caro ($ 10) do que um falso positivo (oferecer desconto para um cliente que já ia ficar - $ 1).
 
 ---
 
-# 📂 Estrutura do Projeto
+## 🏗 Arquitetura do Projeto
 
+A evolução do projeto seguiu do formato Notebook procedural para um **código modular isolado** e pronto para produção, focando em MLOps:
+
+```text
+Dados → Notebooks EDA → Refatoração em Scripts (src/) → MLflow Registry → API (Futuro)
 ```
-ev-adoption-ml/
+
+### 📂 Estrutura do Projeto
+
+```text
+ML_TELCO_CHURN/
 │
-├── data
-│   ├── raw              # Dados originais
-│   └── processed        # Dados tratados
+├── data/
+│   ├── raw/                 # Arquivos CSV originais (customers, services, contracts)
+│   └── processed/           # Dados intermediários de exploração
 │
-├── notebooks            # Análises exploratórias e experimentos
+├── docs/                    # Artefatos arquiteturais
+│   ├── plans/               # Planos de implementação executados
+│   └── specs/               # Especificações técnicas e Design Docs
 │
-├── src
-│   ├── api              # API de inferência (FastAPI)
-│   ├── data             # Carregamento e preprocessamento
-│   ├── features         # Engenharia de atributos
-│   ├── models           # Treinamento e inferência
-│   └── pipelines        # Pipelines de treinamento
+├── notebooks/               # Análise Exploratória e Baselines (Scikit-Learn/PyTorch)
 │
-├── tests                # Testes automatizados
+├── src/ml_telco_churn/      # Código de Produção Refatorado
+│   ├── config.py            # Variáveis globais do sistema e DataClasses (SOLID)
+│   ├── data.py              # Ingestão e merge da base bruta
+│   ├── features.py          # Processamento, Pipelines, Scalers e Encoders (Scikit)
+│   ├── model_nn.py          # Arquitetura da Rede Neural (PyTorch - ChurnMLP)
+│   └── train.py             # Script orquestrador que envia artefatos ao MLFlow
 │
-├── docs                 # Documentação do projeto
-│
-├── models               # Artefatos de modelos treinados
-├── mlruns               # Experimentos MLflow
+├── tests/                   # Suíte de testes Pytest (em desenvolvimento)
 │
 ├── README.md
-├── requirements.txt
-├── pyproject.toml
-└── .gitignore
+├── CLAUDE.md                # Diretrizes de desenvolvimento para IAs
+├── pyproject.toml           # Dependências modernas via `uv` / Hatch
+└── mlflow.db                # Banco local para o registro de experimentos do MLflow
 ```
 
 ---
 
-# 🛠 Tecnologias Utilizadas
-
-Principais ferramentas utilizadas no projeto:
+## 🛠 Tecnologias Utilizadas
 
 ### Machine Learning
+- **Scikit-Learn:** Criação de pipelines (ColumnTransformer, Imputer, StandardScaler, OneHotEncoder).
+- **PyTorch:** Construção da Rede Neural MLP (Multi-Layer Perceptron).
+- **Pandas e NumPy:** Manipulação e vetorização de dados.
 
-* Scikit-Learn
-* PyTorch
-
-### Engenharia de ML
-
-* MLflow
-* Pytest
-
-### API
-
-* FastAPI
-* Uvicorn
-* Flask
-
-### Análise de Dados
-
-* Pandas
-* NumPy
-* Matplotlib
-* Seaborn
+### Engenharia de ML e Dev Tools
+- **MLflow:** Rastreamento de métricas, parâmetros e Model Registry (exportação dos `.joblib` e `.pt` de forma unificada).
+- **uv / pip:** Gerenciamento rápido de dependências Python.
+- **Ruff e Pytest:** Linters e testes automatizados.
 
 ---
 
-# ⚙️ Configuração do Ambiente
+## ⚙️ Como Usar (Guia Rápido)
 
-### 1️⃣ Criar ambiente virtual
+### 1️⃣ Configuração do Ambiente
 
+O projeto usa **uv** e `pyproject.toml` para gestão de dependências. Mas pode ser usado com pip padrão.
+
+#### Opção A: Usando `uv` (Recomendado)
+```bash
+# Instalar o uv (se não tiver): curl -LsSf https://astral.sh/uv/install.sh | sh
+uv sync
 ```
+
+#### Opção B: Usando `venv` e `pip`
+```bash
 python -m venv .venv
-```
-
-### 2️⃣ Ativar ambiente
-
-Windows:
-
-```
-.venv\Scripts\activate
-```
-
-Linux / Mac:
-
-```
-source .venv/bin/activate
+source .venv/bin/activate  # ou .venv\Scripts\activate no Windows
+pip install -e .
 ```
 
 ---
 
-### 3️⃣ Instalar dependências
+### 2️⃣ Subir o servidor do MLflow
 
+O projeto salva **o modelo e os pipelines de transformação** diretamente no MLflow usando um banco SQLite local. Abra uma aba no terminal e rode:
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
-pip install -r requirements.txt
-```
+Deixe esse terminal rodando. Acesse a UI no navegador via: `http://localhost:5000`
 
 ---
 
-# 📊 Executando a Análise Exploratória
+### 3️⃣ Executar o Treinamento Refatorado
 
-Para iniciar a exploração dos dados:
+Para treinar a rede neural PyTorch com a nova estrutura modular orientada a objetos (que lê os dados, faz os tratamentos com Scikit-learn, treina e injeta os artefatos no MLFlow):
 
-```
-jupyter notebook
+Em uma nova aba de terminal, rode:
+```bash
+python src/ml_telco_churn/train.py --epochs 10 --customers notebooks/data/raw/churn_customers.csv --services notebooks/data/raw/churn_services.csv --contracts notebooks/data/raw/churn_contracts.csv
 ```
 
-Abrir o notebook:
-
-```
-notebooks/01_eda.ipynb
-```
+**O que vai acontecer?**
+1. Os dados brutos serão lidos, tratados e formatados.
+2. O PyTorch vai treinar por 10 épocas.
+3. O MLflow salvará uma run contendo o modelo Scikit-Learn (`preprocessor`) e o modelo PyTorch (`pytorch_model`) vinculados.
 
 ---
 
-# 🧪 Experimentos com MLflow
+## 🚀 Roadmap de Evolução
 
-Os experimentos de treinamento são registrados utilizando **MLflow**.
-
-Para iniciar o servidor local:
-
-```
-mlflow ui
-```
-
-Depois acessar:
-
-```
-http://localhost:5000
-```
+* ✅ **Etapa 1:** EDA, baselines, e protótipos de modelos PyTorch em Notebooks.
+* ✅ **Etapa 2:** Refatoração de todo o treinamento num pipeline limpo, seguindo SOLID e focado em engenharia (Pasta `src/`). Integração unificada dos artefatos ao MLFlow.
+* ⏳ **Etapa 3:** Desenvolvimento da suíte de `Testes Detalhados`.
+* ⏳ **Etapa 4:** Criação da API de inferência usando **FastAPI** para servir as predições carregando os artefatos salvos pelo MLFlow.
+* ⏳ **Etapa 5:** Documentação Final e Deploy da aplicação em nuvem/Docker.
 
 ---
 
-# 🚀 Roadmap do Projeto
+## 📚 Contexto Acadêmico
 
-Etapas planejadas para evolução do projeto:
-
-### Etapa 1
-
-* Estrutura do projeto
-* EDA
-* Criação do target
-* Baselines com Scikit-Learn
-* Tracking com MLflow
-
-### Etapa 2
-
-* Construção de rede neural MLP com PyTorch
-* Comparação com modelos tradicionais
-
-### Etapa 3
-
-* Refatoração do código em módulos
-* Criação de pipeline reprodutível
-* Implementação da API de inferência
-
-### Etapa 4
-
-* Model Card
-* Documentação
-* Deploy em nuvem
+Este projeto faz parte do **Tech Challenge da Pós-Graduação em Machine Learning Engineering da FIAP (Fase 1 - Grupo 21)**. O desafio mimetiza a evolução real de um produto de ML: iniciar com a exploração de dados simples e progredir até um pipeline sustentável de MLOps de código robusto.
 
 ---
 
-# 📚 Contexto Acadêmico
+## 👨‍💻 Autores
 
-Este projeto faz parte do **Tech Challenge da Pós-Graduação em Machine Learning Engineering da FIAP**, cujo objetivo é construir um pipeline completo de Machine Learning aplicando boas práticas de engenharia de software e ciência de dados.
-
----
-
-# 👨‍💻 Autor
-
-**Braian Montoro**
-
-Projeto desenvolvido como parte dos estudos em **Machine Learning Engineering**.
+**Grupo 21 (FIAP)**
+- **Eduardo Batista** (eduardoobatista2002@hotmail.com)
+- **Braian Montoro**
