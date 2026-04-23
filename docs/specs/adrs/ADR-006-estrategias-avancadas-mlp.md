@@ -1,4 +1,4 @@
-# ADR-003: Estratégias Avançadas para MLP Tabular (Quebrando o Baseline)
+# ADR-006: Estratégias Avançadas para MLP Tabular (Quebrando o Baseline)
 
 **Status:** Proposto
 **Data:** 23 de Abril de 2026

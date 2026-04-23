@@ -1,4 +1,4 @@
-# ADR-004: Escolha da Métrica de Avaliação Primária (PR-AUC)
+# ADR-003: Escolha da Métrica de Avaliação Primária (PR-AUC)
 
 **Status:** Aceito
 **Data:** 23 de Abril de 2026

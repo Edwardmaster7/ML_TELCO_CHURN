@@ -1,4 +1,4 @@
-# ADR-006: Abandono da Calibração de Probabilidade Isotonic/Platt
+# ADR-004: Abandono da Calibração de Probabilidade Isotonic/Platt
 
 **Status:** Aceito
 **Data:** 23 de Abril de 2026
