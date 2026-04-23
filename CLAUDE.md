@@ -38,5 +38,7 @@ Este arquivo serve como base para orientar o desenvolvimento e as interações c
 ### 6. Documentação
 - Arquivos de documentação sobre escopos, planos arquiteturais e especificações devem sempre ser armazenados exclusivamente nos diretórios:
   - `docs/specs/`
+  - `docs/specs/adrs/` (Para Architecture Decision Records)
   - `docs/plans/`
+- **Decisões Técnicas:** Utilize o formato **ADR (Architecture Decision Record)** para registrar escolhas arquiteturais ou de modelagem significativas. Um ADR é um documento curto (~1 página) que registra o contexto, a decisão tomada e as alternativas consideradas/trade-offs (Ex: *ADR-001: Escolhemos usar MLP em vez de XGBoost porque...*).
 - *Nota: É terminantemente proibida a criação ou o uso de pastas não-padronizadas (ex: não usar `docs/superpowers`).*
