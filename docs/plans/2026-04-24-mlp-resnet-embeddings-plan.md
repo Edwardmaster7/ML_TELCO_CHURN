@@ -391,12 +391,68 @@ with mlflow.start_run(run_name="MLP_ResNet_Embeddings"):
     from mlflow.models.signature import infer_signature
     sig = infer_signature({"x_num": sample_num, "x_cat": sample_cat}, out_sig)
     
-    mlflow.pytorch.log_model(
-        final_model, 
-        name="model",
-        registered_model_name="MLP_ResNet_Embeddings",
-        signature=sig
-    )
-    
-    print(f"TEST PR-AUC FINAL: {test_pr_auc:.4f}")
+- [ ] **Step 3: Adicionar a Baseline da Regressão Logística e Gráficos de Comparação**
+
+```python
+# Após o bloco de registro do MLflow, implementaremos o retreino da Regressão Logística 
+# para plotagem comparativa das curvas (seguindo o padrão de mercado do projeto)
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import PrecisionRecallDisplay, RocCurveDisplay
+
+# A regressão logística precisa do Pipeline One-Hot
+# (re-criamos rapidamente um preprocessor apenas para ela, pois o Ordinal não funciona para modelos lineares)
+from sklearn.preprocessing import OneHotEncoder
+
+lr_cat_pipeline = Pipeline([
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('ohe', OneHotEncoder(drop='first', handle_unknown='ignore', sparse_output=False))
+])
+
+lr_preprocessor = ColumnTransformer(transformers=[
+    ('num', num_pipeline, num_cols),
+    ('cat', lr_cat_pipeline, cat_cols)
+])
+
+X_tr_lr = lr_preprocessor.fit_transform(X_tr)
+X_test_lr = lr_preprocessor.transform(X_test)
+
+lr_model = LogisticRegression(class_weight='balanced', random_state=RANDOM_STATE, max_iter=1000)
+lr_model.fit(X_tr_lr, y_tr)
+lr_probs = lr_model.predict_proba(X_test_lr)[:, 1]
+
+lr_pr_auc = average_precision_score(y_test, lr_probs)
+print(f"LogReg Baseline Test PR-AUC: {lr_pr_auc:.4f}")
+
+# Re-avaliar o MLP original de features avançadas (Notebook 04/05) para comparação
+# Para isso, vamos puxar o arquivo antigo para não retreinar
+import joblib
+try:
+    # Ajuste o caminho se necessário dependendo de como o modelo antigo foi salvo
+    mlp_base_probs = torch.sigmoid(final_model(X_num_test, X_cat_test)).cpu().numpy() # Placeholder if you don't load
+    print("Nota: Para a comparação do MLP Baseline, idealmente carregar o modelo do MLflow ou notebook anterior.")
+except:
+    pass
+
+
+# Plotagem das Curvas
+fig, ax = plt.subplots(1, 2, figsize=(16, 6))
+
+# 1. Curva ROC
+RocCurveDisplay.from_predictions(y_test, test_probs, name="MLP ResNet + Embeddings", ax=ax[0])
+RocCurveDisplay.from_predictions(y_test, lr_probs, name="Logistic Regression Baseline", ax=ax[0], linestyle="--")
+ax[0].set_title("Comparação ROC Curve no Test Set")
+
+# 2. Curva PR
+PrecisionRecallDisplay.from_predictions(y_test, test_probs, name=f"MLP ResNet (PR-AUC={test_pr_auc:.3f})", ax=ax[1])
+PrecisionRecallDisplay.from_predictions(y_test, lr_probs, name=f"LogReg Baseline (PR-AUC={lr_pr_auc:.3f})", ax=ax[1], linestyle="--")
+ax[1].set_title("Comparação Precision-Recall Curve no Test Set")
+
+plt.tight_layout()
+plt.show()
+
+# Opcional: Salvar a figura no MLflow do último experimento
+with mlflow.start_run(run_name="MLP_ResNet_Embeddings", nested=True) as run:
+    fig.savefig("comparison_curves.png")
+    mlflow.log_artifact("comparison_curves.png")
 ```
