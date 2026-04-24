@@ -42,9 +42,19 @@ A jornada da modelagem seguiu uma abordagem iterativa focada em resolver o probl
     *   No entanto, sofremos do *Generalization Gap* quando medido contra os dados puros de Teste, amargando um PR-AUC final de **0.647**.
     *   Concluímos que otimização matemática da função de perda não basta. As redes densas continuam sofrendo para ler a esparsidão do *One-Hot Encoding*.
 
-## 3. Próximos Passos Estratégicos (Quebrando o Teto Linear)
+## 3. A Crise de Generalização e a Correção Metodológica (K-Fold)
 
-Para a Iteração 5, finalizaremos as estratégias documentadas no ADR-006 aplicando duas metamorfoses drásticas na nossa pipeline:
+Ao avaliarmos friamente a Iteração 4, o princípio da Navalha de Occam tornou-se evidente: estávamos escalando drasticamente a complexidade matemática da rede (Losses e Schedulers) para combater um sintoma de um problema que era metodológico. 
 
-1.  **Embeddings em vez de One-Hot:** Iremos destruir o pipeline Scikit-Learn de *OneHotEncoder* para criar um baseado em `OrdinalEncoder`. As variáveis categóricas serão processadas por `nn.Embedding` (Entity Embeddings) para capturar a geografia semântica nativamente dentro do backpropagation (ex: proximidade entre os diferentes tipos de contrato).
-2.  **Modernização Intra-Camada (Micro-arquitetura):** Incorporação de ResNet-like blocks (Skip Connections) no MLP com Layer Normalization e ativação GELU, pavimentando um fluxo de gradiente ideal.
+O *Generalization Gap* (queda brutal de PR-AUC da Validação para o Teste) não era primariamente uma falha de arquitetura, mas sim um **Hyperparameter Overfitting**. O framework de tuning (Optuna) estava avaliando milhares de épocas e dezenas de iterações sobre o mesmo corte estático de validação (`X_val`), decorando as flutuações amostrais e falhando ao enfrentar o Teste Cego.
+
+### Iteração 5: Um Passo Metodológico Atrás (`03_mlp_pytorch.ipynb`)
+Decidimos frear a introdução de *ResNet Blocks* e *Embeddings* e retornar ao berço do primeiro experimento PyTorch. 
+*   **O Que Foi Feito:** Retornamos ao notebook `03_mlp_pytorch.ipynb` adicionando uma nova fase final onde injetamos o rigor estatístico da **Validação Cruzada K-Fold (StratifiedKFold)** diretamente no coração do Optuna. O framework passa a avaliar o modelo por sua *Média de PR-AUC* em múltiplos folds.
+*   **A Racionalidade:** Precisamos garantir que estamos extraindo 100% da capacidade do *MLP Vanilla* antes de condená-lo. Se o K-Fold em uma rede simples for capaz de bater a Regressão Logística, todo o acréscimo de complexidade anterior seria considerado sob-engenharia e desperdício de recursos.
+
+## 4. Próximos Passos Estratégicos (Aguardando Evidências)
+
+Caso a validação K-Fold prove de uma vez por todas que o MLP tradicional é matematicamente incapaz de superar o "teto linear" da base de dados, a arquitetura avançará para o estágio de modernização estrutural:
+1.  **Embeddings em vez de One-Hot:** Destruição do pipeline Scikit-Learn de *OneHotEncoder* e aplicação de `nn.Embedding` (Entity Embeddings) para capturar a geografia semântica.
+2.  **Modernização Intra-Camada (Micro-arquitetura):** Incorporação de ResNet-like blocks (Skip Connections) no MLP com Layer Normalization e ativação GELU.
