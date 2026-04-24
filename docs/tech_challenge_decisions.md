@@ -35,11 +35,16 @@ A jornada da modelagem seguiu uma abordagem iterativa focada em resolver o probl
     *   As features foram um sucesso absoluto para o modelo linear. A Regressão Logística subiu o teto do PR-AUC para **0.662**.
     *   O PyTorch MLP Tuned se afundou novamente em um trade-off rígido. Voltou a priorizar Recall alto e parou em PR-AUC **0.649**, sendo ofuscado novamente pela simplicidade da regressão.
 
+### Iteração 4: Fase 1 das Estratégias Avançadas (Focal Loss e OneCycleLR) (`06_mlp_advanced_loss.ipynb`)
+*   **O Que Foi Feito:** Implementação do início das táticas baseadas no estado-da-arte para dados tabulares, aplicando a **Focal Loss** em conjunto com **AdamW** e o otimizador oscilante **OneCycleLR**. Reutilizamos o mesmo dataset base processado do experimento 05.
+*   **O Que Aprendemos:**
+    *   Conseguimos dominar a arquitetura técnica da Focal Loss em PyTorch mantendo um PR-AUC validado elevado no Optuna (0.691).
+    *   No entanto, sofremos do *Generalization Gap* quando medido contra os dados puros de Teste, amargando um PR-AUC final de **0.647**.
+    *   Concluímos que otimização matemática da função de perda não basta. As redes densas continuam sofrendo para ler a esparsidão do *One-Hot Encoding*.
+
 ## 3. Próximos Passos Estratégicos (Quebrando o Teto Linear)
 
-A atual restrição do projeto exige superação arquitetural. Como um PyTorch MLP padrão falhou em captar o valor intrínseco das features avançadas na mesma medida em que a Regressão Logística captou, a modelagem neural sofrerá mutações baseadas no estado da arte de *Deep Learning for Tabular Data* sem infligir as regras de entrega do Tech Challenge:
+Para a Iteração 5, finalizaremos as estratégias documentadas no ADR-006 aplicando duas metamorfoses drásticas na nossa pipeline:
 
-1.  **Função de Perda Agressiva (Loss):** Transição de `BCEWithLogitsLoss` normal para Focal Loss ou uso estrito do fator `pos_weight`, focando explicitamente a atenção do gradiente nas fronteiras difíceis do ranqueamento e não apenas na predição de probabilidade.
-2.  **Modernização Intra-Camada (Micro-arquitetura):** Incorporação de ResNet-like blocks (Skip Connections) no MLP, Layer Normalization em substituição ao Batch Normalization em batch sizes pequenos e transição de ativação ReLU para GELU/Mish.
-3.  **Embeddings em vez de One-Hot:** As variáveis categóricas serão processadas por `nn.Embedding` (Entity Embeddings) para capturar a geografia semântica (ex: proximidade entre os diferentes tipos de contrato ou formas de pagamento eletrônico), fornecendo insumos mais ricos para a Linear Layer inicial.
-4.  **Regime de Escape (Schedulers):** Adoção de schedulers oscilantes intensos (OneCycleLR, CosineAnnealingWarmRestarts) associados ao AdamW para expulsar o treinamento do buraco negro do ótimo local precoce induzido pelo desbalanceamento natural da base.
+1.  **Embeddings em vez de One-Hot:** Iremos destruir o pipeline Scikit-Learn de *OneHotEncoder* para criar um baseado em `OrdinalEncoder`. As variáveis categóricas serão processadas por `nn.Embedding` (Entity Embeddings) para capturar a geografia semântica nativamente dentro do backpropagation (ex: proximidade entre os diferentes tipos de contrato).
+2.  **Modernização Intra-Camada (Micro-arquitetura):** Incorporação de ResNet-like blocks (Skip Connections) no MLP com Layer Normalization e ativação GELU, pavimentando um fluxo de gradiente ideal.
