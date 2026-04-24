@@ -1,7 +1,7 @@
-# ADR-001: Frameworks de Rastreamento e Serviço de ML
+# ADR-003: Frameworks de Rastreamento e Serviço de ML
 
 **Status:** Aceito
-**Data:** 23 de Abril de 2026
+**Data:** 20 de Abril de 2026
 
 ## Contexto
 O projeto faz parte de um Tech Challenge que exige a demonstração de maturidade em MLOps, governança de modelos e engenharia de software para entrega de inferências em produção. O ciclo de vida tradicional de exportar modelos como arquivos puros em disco (ex: `.pkl` ou `.joblib`) dificulta a reprodutibilidade e o rastreamento do histórico de treinamento.

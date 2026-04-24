@@ -1,7 +1,7 @@
 # ADR-005: Estratégia de Engenharia de Features Avançada (Data-Centric)
 
 **Status:** Aceito
-**Data:** 23 de Abril de 2026
+**Data:** 22 de Abril de 2026
 
 ## Contexto
 Durante a Fase 2, os modelos estagnaram em PR-AUC mesmo após extenso tuning de hiperparâmetros (model-centric). Havia a necessidade de injetar features derivadas focadas no comportamento financeiro e de engajamento do cliente. Surgiu o questionamento se deveríamos simplesmente adicionar essas colunas no topo do dataset já processado (`churn_processed.csv`) ou refazer o pipeline.

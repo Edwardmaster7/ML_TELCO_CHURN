@@ -1,7 +1,7 @@
 # ADR-004: Abandono da Calibração de Probabilidade Isotonic/Platt
 
 **Status:** Aceito
-**Data:** 23 de Abril de 2026
+**Data:** 21 de Abril de 2026
 
 ## Contexto
 Durante o tuning do MLP PyTorch (Iteração 2), o modelo resultante exibia um altíssimo Recall (~85%) e baixa Precision (~48%). Em uma tentativa de corrigir a distribuição enviesada das saídas logit, aplicamos a `IsotonicRegression` como método de calibração post-hoc no conjunto de validação.

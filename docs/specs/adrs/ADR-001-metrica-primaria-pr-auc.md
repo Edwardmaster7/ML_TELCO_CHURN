@@ -1,7 +1,7 @@
-# ADR-003: Escolha da Métrica de Avaliação Primária (PR-AUC)
+# ADR-001: Escolha da Métrica de Avaliação Primária (PR-AUC)
 
 **Status:** Aceito
-**Data:** 23 de Abril de 2026
+**Data:** 03 de Abril de 2026
 
 ## Contexto
 O dataset IBM Telco Customer Churn apresenta um desbalanceamento moderado, onde a classe positiva (Churn) representa aproximadamente 26% das amostras. Em cenários de desbalanceamento, métricas como Acurácia são enganosas (um modelo que preveja "Não Churn" para todos teria ~74% de acurácia). Além disso, a curva ROC-AUC tende a ser excessivamente otimista porque é inflada pela grande quantidade de Verdadeiros Negativos (clientes que não cancelam e são fáceis de prever).

@@ -1,7 +1,7 @@
 # ADR-002: Arquitetura Base do Modelo Preditivo (MLP)
 
 **Status:** Aceito
-**Data:** 23 de Abril de 2026
+**Data:** 20 de Abril de 2026
 
 ## Contexto
 O problema central é a classificação binária de Churn em dados tabulares oriundos do banco de dados IBM Telco Customer. A literatura de Machine Learning consolida que modelos baseados em árvores com gradient boosting (XGBoost, LightGBM, CatBoost) são consistentemente os "Estado da Arte" para matrizes de dados tabulares não uniformes, superando quase sempre Redes Neurais Feed-Forward (MLPs) de prateleira, tanto em performance quanto em facilidade de uso.
