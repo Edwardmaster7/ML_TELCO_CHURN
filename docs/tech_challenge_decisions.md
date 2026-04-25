@@ -40,7 +40,7 @@ A jornada da modelagem seguiu uma abordagem iterativa focada em resolver o probl
 *   **O Que Aprendemos:**
     *   Conseguimos dominar a arquitetura técnica da Focal Loss em PyTorch mantendo um PR-AUC validado elevado no Optuna (0.691).
     *   No entanto, sofremos do *Generalization Gap* quando medido contra os dados puros de Teste, amargando um PR-AUC final de **0.647**.
-    *   Concluímos que otimização matemática da função de perda não basta. As redes densas continuam sofrendo para ler a esparsidão do *One-Hot Encoding*.
+    *   A constatação dessa distorção nos levou ao questionamento metodológico solucionado na Iteração 5.
 
 ## 3. A Crise de Generalização e a Correção Metodológica (K-Fold)
 
@@ -48,13 +48,16 @@ Ao avaliarmos friamente a Iteração 4, o princípio da Navalha de Occam tornou-
 
 O *Generalization Gap* (queda brutal de PR-AUC da Validação para o Teste) não era primariamente uma falha de arquitetura, mas sim um **Hyperparameter Overfitting**. O framework de tuning (Optuna) estava avaliando milhares de épocas e dezenas de iterações sobre o mesmo corte estático de validação (`X_val`), decorando as flutuações amostrais e falhando ao enfrentar o Teste Cego.
 
-### Iteração 5: Um Passo Metodológico Atrás (`03_mlp_pytorch.ipynb`)
-Decidimos frear a introdução de *ResNet Blocks* e *Embeddings* e retornar ao berço do primeiro experimento PyTorch. 
-*   **O Que Foi Feito:** Retornamos ao notebook `03_mlp_pytorch.ipynb` adicionando uma nova fase final onde injetamos o rigor estatístico da **Validação Cruzada K-Fold (StratifiedKFold)** diretamente no coração do Optuna. O framework passa a avaliar o modelo por sua *Média de PR-AUC* em múltiplos folds.
-*   **A Racionalidade:** Precisamos garantir que estamos extraindo 100% da capacidade do *MLP Vanilla* antes de condená-lo. Se o K-Fold em uma rede simples for capaz de bater a Regressão Logística, todo o acréscimo de complexidade anterior seria considerado sob-engenharia e desperdício de recursos.
+### Iteração 5: O Passo Metodológico Atrás (`03_mlp_pytorch.ipynb` e `06_mlp_advanced_loss.ipynb`)
+Decidimos frear a introdução de *ResNet Blocks* e *Embeddings* e retornar para os dois experimentos anteriores com o objetivo de higienizá-los estatisticamente.
+*   **O Que Foi Feito:** Retornamos ao notebook base (`03`) e ao notebook avançado de perda (`06`), adicionando seções finais onde injetamos o rigor da **Validação Cruzada K-Fold (StratifiedKFold)** diretamente no coração do Optuna. O framework passou a avaliar o modelo por sua *Média de PR-AUC* em múltiplos folds cegos.
+*   **O Que Aprendemos:** 
+    *   No MLP base (Notebook 03), a métrica ajustou para 0.639, erradicando o overfitting, mas solidificando o teto de 0.64 como limite máximo daquela arquitetura pobre.
+    *   Na MLP Avançada com Focal Loss (Notebook 06), a técnica brilhou: sem o overfitting, o modelo consolidado e validado por K-Fold atingiu a sua melhor pontuação histórica no Teste Cego: **0.6512**.
+*   **A Racionalidade:** O K-Fold encostou nossa rede neural na Regressão Logística (0.655), atestando o funcionamento perfeito da engenharia da função Focal Loss. O último gargalo agora restrito para vencer a LogReg de vez reside no One-Hot Encoding.
 
-## 4. Próximos Passos Estratégicos (Aguardando Evidências)
+## 4. Próximos Passos Estratégicos (Quebrando o Teto Linear)
 
-Caso a validação K-Fold prove de uma vez por todas que o MLP tradicional é matematicamente incapaz de superar o "teto linear" da base de dados, a arquitetura avançará para o estágio de modernização estrutural:
+Como a Focal Loss otimizada com a validação K-Fold atestou o pleno funcionamento da otimização Bayesiana, a arquitetura avançará para o estágio de modernização estrutural:
 1.  **Embeddings em vez de One-Hot:** Destruição do pipeline Scikit-Learn de *OneHotEncoder* e aplicação de `nn.Embedding` (Entity Embeddings) para capturar a geografia semântica.
 2.  **Modernização Intra-Camada (Micro-arquitetura):** Incorporação de ResNet-like blocks (Skip Connections) no MLP com Layer Normalization e ativação GELU.
