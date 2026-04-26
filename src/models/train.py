@@ -49,24 +49,12 @@ def main():
     X = df_clean.drop(columns=[CONFIG.target_col, CONFIG.id_col], errors='ignore')
     y = prepare_target(df_clean[CONFIG.target_col])
 
-    # O pipeline do notebook usa hiperparâmetros tunados (K-Fold + Focal)
-    # Valores extraídos do notebook 06_mlp_advanced_loss.ipynb
-    best_params = {
-        'dropout_rate': 0.364,
-        'hidden_size_1': 64,
-        'hidden_size_2': 32,
-        'focal_gamma': 0.082,
-        'focal_alpha': 0.778,
-        'max_lr': 0.0039,
-        'weight_decay': 0.0049
-    }
-
-    hidden_dims = [best_params['hidden_size_1'], best_params['hidden_size_2']]
-    dropout_rate = best_params['dropout_rate']
-    focal_gamma = best_params['focal_gamma']
-    focal_alpha = best_params['focal_alpha']
-    max_lr = best_params['max_lr']
-    weight_decay = best_params['weight_decay']
+    hidden_dims = [CONFIG.best_params['hidden_size_1'], CONFIG.best_params['hidden_size_2']]
+    dropout_rate = CONFIG.best_params['dropout_rate']
+    focal_gamma = CONFIG.best_params['focal_gamma']
+    focal_alpha = CONFIG.best_params['focal_alpha']
+    max_lr = CONFIG.best_params['max_lr']
+    weight_decay = CONFIG.best_params['weight_decay']
 
     epochs_to_run = args.epochs
     batch_size = 64
@@ -186,7 +174,7 @@ def main():
     # 5. MLflow Tracking (SQLite backend)
     # Comando exigido para iniciar ui: mlflow ui --backend-store-uri sqlite:///mlflow.db
     # Usando MLFLOW_TRACKING_URI da variável de ambiente ou do CONFIG para evitar erro do SQLite com artifact_uri
-    tracking_uri = "sqlite:///../mlflow.db"
+    tracking_uri = "sqlite:///../../mlflow.db"
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(CONFIG.mlflow_experiment_name)
 
@@ -194,7 +182,7 @@ def main():
 
     with mlflow.start_run(run_name="MLP_Focal_KFold_Production"):
         # Loga os hiperparâmetros definidos do K-Fold
-        mlflow.log_params(best_params)
+        mlflow.log_params(CONFIG.best_params)
 
         # Loga métricas
         metrics_dict = {

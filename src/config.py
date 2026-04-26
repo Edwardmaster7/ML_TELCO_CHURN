@@ -36,5 +36,16 @@ class ProjectConfig:
     mlflow_tracking_uri: str = "http://127.0.0.1:5000"
     mlflow_experiment_name: str = "03_Refactor_Src"
 
+    # Hiperparâmetros Campeões (Focal Loss + K-Fold) extraídos do notebook 06
+    best_params: dict = field(default_factory=lambda: {
+        'dropout_rate': 0.364,
+        'hidden_size_1': 64,
+        'hidden_size_2': 32,
+        'focal_gamma': 0.082,
+        'focal_alpha': 0.778,
+        'max_lr': 0.0039,
+        'weight_decay': 0.0049
+    })
+
 # Instância global para uso nos scripts (pode ser injetada em funções p/ SOLID)
 CONFIG = ProjectConfig()
