@@ -174,7 +174,7 @@ def main():
     # 5. MLflow Tracking (SQLite backend)
     # Comando exigido para iniciar ui: mlflow ui --backend-store-uri sqlite:///mlflow.db
     # Usando MLFLOW_TRACKING_URI da variável de ambiente ou do CONFIG para evitar erro do SQLite com artifact_uri
-    tracking_uri = "sqlite:///../../mlflow.db"
+    tracking_uri = CONFIG.mlflow_tracking_uri
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(CONFIG.mlflow_experiment_name)
 
