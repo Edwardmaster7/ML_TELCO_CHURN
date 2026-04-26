@@ -61,3 +61,14 @@ Decidimos frear a introdução de *ResNet Blocks* e *Embeddings* e retornar para
 Como a Focal Loss otimizada com a validação K-Fold atestou o pleno funcionamento da otimização Bayesiana, a arquitetura avançará para o estágio de modernização estrutural:
 1.  **Embeddings em vez de One-Hot:** Destruição do pipeline Scikit-Learn de *OneHotEncoder* e aplicação de `nn.Embedding` (Entity Embeddings) para capturar a geografia semântica.
 2.  **Modernização Intra-Camada (Micro-arquitetura):** Incorporação de ResNet-like blocks (Skip Connections) no MLP com Layer Normalization e ativação GELU.
+
+## 5. Conclusão da Modelagem e Escolha para Deploy (O Veredito Final)
+
+Com a execução da iteração final, a fase de modelagem foi oficialmente encerrada.
+
+Os testes extensivos comprovaram que a **Regressão Logística** atua como o melhor modelo absoluto para este dataset tabular específico. A tentativa de aplicar **ResNet com Embeddings** (mesmo com regularização) resultou em overfitting. Isso confirmou nossa hipótese analítica: o dataset do IBM Telco carece da hierarquia complexa de features (deep feature hierarchy) que as redes profundas como ResNets precisam para extrair valor, fazendo com que o modelo decore o ruído.
+
+**Decisão Final para Deploy:**
+Apesar da superioridade simples da Regressão Logística neste contexto, as restrições do **Tech Challenge** exigem o deploy de uma arquitetura baseada em MLP puramente em PyTorch.
+
+Desta forma, o modelo **`MLP_Focal_KFold`** (com PR-AUC de 0.6539) foi selecionado como o modelo campeão. Ele atende de forma irretocável às restrições acadêmicas da entrega e garantiu a melhor capacidade de generalização e robustez encontrada nas arquiteturas de redes neurais testadas. É este modelo que será embarcado e servido em nossa API utilizando **FastAPI**.
