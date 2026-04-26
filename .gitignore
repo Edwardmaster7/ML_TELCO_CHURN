@@ -11,3 +11,4 @@ mlartifacts
 
 .superpowers
 .worktrees/
+mlflow.db

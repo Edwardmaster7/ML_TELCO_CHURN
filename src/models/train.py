@@ -220,7 +220,7 @@ def main():
             pip_requirements=["torch==2.1.0"] # Ajustado aos reqs (substitua conforme o venv se diferir muito)
         )
 
-        logger.info("Modelo campeão (Focal Loss + K-Fold) e métricas registradas no MLflow.")
+        logger.info("Modelo (Focal Loss + K-Fold) e métricas registradas no MLflow.")
 
 if __name__ == "__main__":
     main()
