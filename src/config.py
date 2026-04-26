@@ -23,13 +23,16 @@ class ProjectConfig:
 
     # Features Lists
     num_features: List[str] = field(default_factory=lambda: [
-        'tenure', 'MonthlyCharges', 'TotalCharges'
+        'tenure', 'monthlycharges', 'totalcharges',
+        'charges_per_tenure', 'total_services_count',
+        'is_monthly_contract', 'has_protection_services',
+        'is_high_spender', 'is_new_customer'
     ])
     cat_features: List[str] = field(default_factory=lambda: [
-        'gender', 'Partner', 'Dependents', 'PhoneService', 'MultipleLines',
-        'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
-        'TechSupport', 'StreamingTV', 'StreamingMovies', 'Contract',
-        'PaperlessBilling', 'PaymentMethod'
+        'gender', 'partner', 'dependents', 'phoneservice', 'multiplelines',
+        'internetservice', 'onlinesecurity', 'onlinebackup', 'deviceprotection',
+        'techsupport', 'streamingtv', 'streamingmovies', 'contract',
+        'paperlessbilling', 'paymentmethod'
     ])
 
     # Tracking
