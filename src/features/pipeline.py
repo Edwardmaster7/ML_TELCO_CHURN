@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Aplica limpezas básicas (cast de tipos, dropna) e padroniza nomes."""
+    """Aplica limpezas básicas e feature engineering avançada (Data-Centric)."""
     df_clean = df.copy()
 
     # Tratamento de case: padroniza nomes das colunas (lowercase, sem espaços)
@@ -17,7 +17,41 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 
     if 'totalcharges' in df_clean.columns:
         df_clean['totalcharges'] = pd.to_numeric(df_clean['totalcharges'], errors='coerce')
-        df_clean.dropna(subset=['totalcharges'], inplace=True)
+        # Preencher NaNs em vez de dropar, seguindo o notebook
+        median_tc = df_clean['totalcharges'].median()
+        df_clean['totalcharges'] = df_clean['totalcharges'].fillna(median_tc)
+
+    # Transformação Binária de Colunas Yes/No (excluindo target que é tratado depois)
+    for col in df_clean.select_dtypes("object").columns:
+        if df_clean[col].dropna().isin(['yes', 'no', 'Yes', 'No']).all() and col != 'churn':
+            df_clean[col] = df_clean[col].map({'Yes': 1, 'No': 0, 'yes': 1, 'no': 0})
+
+    # Advanced Feature Engineering (do Notebook 04)
+    if 'contract' in df_clean.columns:
+        df_clean['is_monthly_contract'] = (df_clean['contract'].str.lower() == 'month-to-month').astype(int)
+
+    if 'tenure' in df_clean.columns:
+        df_clean['is_new_customer'] = (df_clean['tenure'] <= 6).astype(int)
+
+    if 'totalcharges' in df_clean.columns and 'tenure' in df_clean.columns:
+        df_clean['charges_per_tenure'] = df_clean['totalcharges'] / (df_clean['tenure'] + 1)
+
+    if 'monthlycharges' in df_clean.columns:
+        q75_monthly = df_clean['monthlycharges'].quantile(0.75)
+        df_clean['is_high_spender'] = (df_clean['monthlycharges'] > q75_monthly).astype(int)
+
+    # Features de Serviços
+    service_cols = ['onlinesecurity', 'onlinebackup', 'deviceprotection', 'techsupport', 'streamingtv', 'streamingmovies']
+    present_services = [c for c in service_cols if c in df_clean.columns]
+    if present_services:
+        cond = (df_clean[present_services] == 'yes') | (df_clean[present_services] == 'Yes') | (df_clean[present_services] == 1)
+        df_clean['total_services_count'] = cond.sum(axis=1)
+
+    protection_cols = ['onlinesecurity', 'onlinebackup', 'deviceprotection', 'techsupport']
+    present_prot = [c for c in protection_cols if c in df_clean.columns]
+    if present_prot:
+        cond_prot = (df_clean[present_prot] == 'yes') | (df_clean[present_prot] == 'Yes') | (df_clean[present_prot] == 1)
+        df_clean['has_protection_services'] = cond_prot.any(axis=1).astype(int)
 
     return df_clean
 
