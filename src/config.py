@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from typing import List
+import os
 
 @dataclass
 class ProjectConfig:
@@ -49,6 +50,11 @@ class ProjectConfig:
         'max_lr': 0.0046,
         'weight_decay': 0.00025
     })
+
+    CORS_ORIGINS = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "*").split(",")]
+    CORS_CREDENTIALS = os.getenv("CORS_CREDENTIALS", "true").lower() == "true"
+    CORS_METHODS = [method.strip() for method in os.getenv("CORS_METHODS", "*").split(",")]
+    CORS_HEADERS = [header.strip() for header in os.getenv("CORS_HEADERS", "*").split(",")]
 
 # Instância global para uso nos scripts (pode ser injetada em funções p/ SOLID)
 CONFIG = ProjectConfig()
