@@ -1,0 +1,43 @@
+services:
+  mlflow:
+    image: ghcr.io/astral-sh/uv:python3.13-slim
+    container_name: mlflow_server
+    ports:
+      - "5000:5000"
+    environment:
+      - UV_COMPILE_BYTECODE=1
+    volumes:
+      - ./mlruns:/app/mlruns
+      - ./mlflow.db:/app/mlflow.db
+    working_dir: /app
+    command: >
+      sh -c "uv pip install mlflow &&
+             uv run mlflow server
+             --backend-store-uri sqlite:///mlflow.db
+             --default-artifact-root /app/mlruns
+             --host 0.0.0.0
+             --port 5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: churn_api
+    ports:
+      - "8000:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - DATABASE_URL=sqlite+aiosqlite:///mlflow.db
+      - MODEL_NAME=MLP_Focal_KFold_Script
+      - MODEL_STAGE=production
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    volumes:
+      - ./mlruns:/app/mlruns
+      - ./mlflow.db:/app/mlflow.db
