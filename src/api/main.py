@@ -30,7 +30,6 @@ async def lifespan(app: FastAPI):
         ml_service.load_model_artifacts(run_id=RUN_ID)
     except Exception as e:
         logger.error(f"Erro no Lifespan: {e}")
-        pass
     yield
     logger.info("Desligando API.")
 
@@ -63,7 +62,6 @@ def health_check():
     # Let me adjust the test to expect degraded or set ml_service to have mocks.
     # For now, let's look at the instruction:
     # "CRITICAL NOTE FOR STEP 3: Adjust the health_check endpoint logic so the provided test_health_check
-    # (which expects status 200 even when mocked) passes correctly. If you need to tweak the test
     # to assert status="degraded" and model_loaded=False when the mock prevents model loading, DO THAT."
 
     model_loaded = ml_service.model is not None and ml_service.preprocessor is not None

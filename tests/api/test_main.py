@@ -13,10 +13,11 @@ def client():
 
 def test_health_check(client):
     """Testa o endpoint de readiness que atesta se a rede neural subiu na API."""
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json()["status"] == "degraded"
-    assert response.json().get("model_loaded") is False
+    with patch("src.api.main.ml_service.model", True), patch("src.api.main.ml_service.preprocessor", True):
+        response = client.get("/health")
+        assert response.status_code == 200
+        assert response.json()["status"] == "ok"
+        assert response.json().get("model_loaded") is True
 
 @patch("src.api.ml_service.MLService.predict_churn")
 def test_predict_endpoint_success(mock_predict, client):

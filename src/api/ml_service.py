@@ -4,7 +4,6 @@ Responsável por fazer cache (Singleton) dos modelos de produção e coordenar a
 pela rede MLP_Focal_KFold do Pytorch em conjunto com pipeline baseline de Data Science.
 """
 import os
-import sys
 import pandas as pd
 import numpy as np
 import torch
@@ -13,7 +12,6 @@ import mlflow.sklearn
 import mlflow.pytorch
 import logging
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from src.features.pipeline import clean_data
 
 logger = logging.getLogger(__name__)
