@@ -40,7 +40,11 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Iniciando FastAPI e carregando modelos no MLService...")
     try:
-        ml_service.load_model_artifacts(model_name=MODEL_NAME, stage_or_alias=STAGE_OR_ALIAS)
+        ml_service.load_model_artifacts(
+            model_name=MODEL_NAME,
+            stage_or_alias=STAGE_OR_ALIAS,
+            tracking_uri=settings.mlflow_tracking_uri
+        )
     except Exception as e:
         logger.error(f"Erro no Lifespan: {e}")
     yield

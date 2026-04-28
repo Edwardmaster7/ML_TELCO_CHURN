@@ -1,4 +1,4 @@
-.PHONY: help test run
+.PHONY: help test run train docker-up docker-down
 
 help:
 	@echo "======================================================================"
@@ -9,10 +9,22 @@ help:
 	@echo "  make help       - Mostra esta mensagem de ajuda"
 	@echo "  make test       - Executa toda a suíte de testes com Pytest"
 	@echo "  make run        - Inicia o servidor FastAPI em modo de desenvolvimento"
+	@echo "  make train      - Executa o script de treinamento do modelo"
+	@echo "  make docker-up  - Sobe os serviços via Docker Compose (build e background)"
+	@echo "  make docker-down- Para e remove os serviços do Docker Compose"
 	@echo ""
 
 test:
 	uv run pytest tests/ -v
 
 run:
-	uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+	uv run fastapi dev src/main.py
+
+train:
+	uv run python src/models/train.py
+
+docker-up:
+	docker compose up --build -d
+
+docker-down:
+	docker compose down

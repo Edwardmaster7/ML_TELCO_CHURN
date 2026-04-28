@@ -37,7 +37,7 @@ class ProjectConfig:
     ])
 
     # Tracking
-    mlflow_tracking_uri: str = "http://127.0.0.1:5000"
+    mlflow_tracking_uri: str = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
     mlflow_experiment_name: str = "03_Refactor_Src"
 
     database_url: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///mlflow.db")
