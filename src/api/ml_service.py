@@ -12,6 +12,7 @@ import mlflow.sklearn
 import mlflow.pytorch
 import logging
 
+from typing import Optional, Any
 from src.features.pipeline import clean_data
 
 logger = logging.getLogger(__name__)
@@ -25,13 +26,16 @@ class MLService:
         device (torch.device): device local disponível ('cuda' ou 'cpu').
     """
     _instance = None
+    preprocessor: Optional[Any] = None
+    model: Optional[torch.nn.Module] = None
+    device: Optional[torch.device] = None
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(MLService, cls).__new__(cls)
             cls._instance.preprocessor = None
             cls._instance.model = None
-            cls._instance.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            cls._instance.device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.mps.is_available() else 'cpu')
         return cls._instance
 
     def load_model_artifacts(self, run_id: str, tracking_uri: str = "sqlite:///mlflow.db"):
