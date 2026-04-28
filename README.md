@@ -30,7 +30,7 @@ A otimização foca num trade-off de negócio usando **Cost-Sensitive Learning**
 A evolução do projeto seguiu do formato Notebook procedural para um **código modular isolado** e pronto para produção, focando em MLOps:
 
 ```text
-Dados → Notebooks EDA → Refatoração em Scripts (src/) → MLflow Registry → API (Futuro)
+Dados → Notebooks EDA → Refatoração em Scripts (src/) → MLflow Registry → API (FastAPI)
 ```
 
 ### 📂 Estrutura do Projeto
@@ -39,28 +39,24 @@ Dados → Notebooks EDA → Refatoração em Scripts (src/) → MLflow Registry 
 ML_TELCO_CHURN/
 │
 ├── data/
-│   ├── raw/                 # Arquivos CSV originais (customers, services, contracts)
-│   └── processed/           # Dados intermediários de exploração
-│
-├── docs/                    # Artefatos arquiteturais
-│   ├── plans/               # Planos de implementação executados
-│   └── specs/               # Especificações técnicas e Design Docs
+├── docs/                    # Artefatos arquiteturais, Plantas e Relatórios
+│   ├── ModelCard.md                 # Entregável Etapa 4: Model Card
+│   └── Deploy_Monitoramento.md      # Entregável Etapa 4: Deploy e Monitoramento
 │
 ├── notebooks/               # Análise Exploratória e Baselines (Scikit-Learn/PyTorch)
 │
-├── src/ml_telco_churn/      # Código de Produção Refatorado
-│   ├── config.py            # Variáveis globais do sistema e DataClasses (SOLID)
-│   ├── data.py              # Ingestão e merge da base bruta
-│   ├── features.py          # Processamento, Pipelines, Scalers e Encoders (Scikit)
-│   ├── model_nn.py          # Arquitetura da Rede Neural (PyTorch - ChurnMLP)
-│   └── train.py             # Script orquestrador que envia artefatos ao MLFlow
+├── src/                     # Código de Produção Refatorado
+│   ├── api/                 # Endpoints FastAPI e Roteamento
+│   ├── core/                # Schemas Pydantic, ML Service, Middlewares e Configs
+│   ├── data/                # Ingestão e loaders
+│   ├── features/            # Processamento, Pipelines e Scalers Scikit-Learn
+│   ├── models/              # Treinamento, Teste e Arquitetura ChurnMLP (PyTorch)
+│   └── main.py              # Entrypoint da API REST
 │
-├── tests/                   # Suíte de testes Pytest (em desenvolvimento)
+├── tests/                   # Suíte de testes Pytest (Smoke, Validação, etc.)
 │
-├── README.md
-├── CLAUDE.md                # Diretrizes de desenvolvimento para IAs
-├── pyproject.toml           # Dependências modernas via `uv` / Hatch
-└── mlflow.db                # Banco local para o registro de experimentos do MLflow
+├── pyproject.toml           # Single Source of Truth das Dependências (uv / Hatch)
+└── README.md
 ```
 
 ---
@@ -69,11 +65,11 @@ ML_TELCO_CHURN/
 
 ### Machine Learning
 - **Scikit-Learn:** Criação de pipelines (ColumnTransformer, Imputer, StandardScaler, OneHotEncoder).
-- **PyTorch:** Construção da Rede Neural MLP (Multi-Layer Perceptron).
-- **Pandas e NumPy:** Manipulação e vetorização de dados.
+- **PyTorch:** Construção da Rede Neural MLP (Multi-Layer Perceptron), Early Stopping, Focal Loss.
 
 ### Engenharia de ML e Dev Tools
-- **MLflow:** Rastreamento de métricas, parâmetros e Model Registry (exportação dos `.joblib` e `.pt` de forma unificada).
+- **MLflow:** Rastreamento de métricas, parâmetros e Model Registry.
+- **FastAPI / Pydantic:** Disponibilização da Inference API com validação forte em runtime.
 - **uv / pip:** Gerenciamento rápido de dependências Python.
 - **Ruff e Pytest:** Linters e testes automatizados.
 
@@ -83,63 +79,55 @@ ML_TELCO_CHURN/
 
 ### 1️⃣ Configuração do Ambiente
 
-O projeto usa **uv** e `pyproject.toml` para gestão de dependências. Mas pode ser usado com pip padrão.
+O projeto usa **uv** e `pyproject.toml` para gestão unificada.
 
-#### Opção A: Usando `uv` (Recomendado)
 ```bash
 # Instalar o uv (se não tiver): curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync
 ```
 
-#### Opção B: Usando `venv` e `pip`
+### 2️⃣ Subir o MLflow (Registry Local)
+
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # ou .venv\Scripts\activate no Windows
-pip install -e .
+uv run mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+Acesse a UI no navegador via: `http://localhost:5000`
+
+### 3️⃣ Subir a API de Predição do Modelo (FastAPI)
+
+Foi providenciado um comando Makefile para carregar a API com os modelos registrados (Certifique-se de que o MLFlow tenha gerado a run do modelo `MLP_Focal_KFold_Script`):
+
+```bash
+make run
+# ou: uv run uvicorn src.main:app --host 0.0.0.0 --port 8000
+```
+- Validação no Pydantic via Endpoints Locais:
+  - Documentação Swagger da API: `http://localhost:8000/docs`
+  - URL p/ POST de cliente: `http://localhost:8000/api/v1/predict` (Pode utilizar os mock files da raiz do repositório)
+
+### 4️⃣ Suíte de Testes (Pytest)
+
+```bash
+uv run pytest tests/
 ```
 
 ---
 
-### 2️⃣ Subir o servidor do MLflow
+## 📄 Documentação Obrigatória (Etapa 4)
 
-O projeto salva **o modelo e os pipelines de transformação** diretamente no MLflow usando um banco SQLite local. Abra uma aba no terminal e rode:
+Conforme os requisitos da fase final de documentação, arquivos complementares consolidados que documentam performance, cenários falhos e planos de retenção no ambiente produtivo para o Tech Challenge estão anexados:
 
-```bash
-mlflow ui --backend-store-uri sqlite:///mlflow.db
-```
-Deixe esse terminal rodando. Acesse a UI no navegador via: `http://localhost:5000`
+* [Model Card Oficial do Projeto](./docs/ModelCard.md)
+* [Plano de Deploy da Arquitetura e Estratégia de Monitoramento](./docs/Deploy_Monitoramento.md)
 
 ---
 
-### 3️⃣ Executar o Treinamento Refatorado
+## 🚀 Roadmap (Entregas do Tech Challenge)
 
-Para treinar a rede neural PyTorch com a nova estrutura modular orientada a objetos (que lê os dados, faz os tratamentos com Scikit-learn, treina e injeta os artefatos no MLFlow):
-
-Em uma nova aba de terminal, rode:
-```bash
-python src/ml_telco_churn/train.py --epochs 10 --customers notebooks/data/raw/churn_customers.csv --services notebooks/data/raw/churn_services.csv --contracts notebooks/data/raw/churn_contracts.csv
-```
-
-**O que vai acontecer?**
-1. Os dados brutos serão lidos, tratados e formatados.
-2. O PyTorch vai treinar por 10 épocas.
-3. O MLflow salvará uma run contendo o modelo Scikit-Learn (`preprocessor`) e o modelo PyTorch (`pytorch_model`) vinculados.
-
----
-
-## 🚀 Roadmap de Evolução
-
-* ✅ **Etapa 1:** EDA, baselines, e protótipos de modelos PyTorch em Notebooks.
-* ✅ **Etapa 2:** Refatoração de todo o treinamento num pipeline limpo, seguindo SOLID e focado em engenharia (Pasta `src/`). Integração unificada dos artefatos ao MLFlow.
-* ⏳ **Etapa 3:** Desenvolvimento da suíte de `Testes Detalhados`.
-* ⏳ **Etapa 4:** Criação da API de inferência usando **FastAPI** para servir as predições carregando os artefatos salvos pelo MLFlow.
-* ⏳ **Etapa 5:** Documentação Final e Deploy da aplicação em nuvem/Docker.
-
----
-
-## 📚 Contexto Acadêmico
-
-Este projeto faz parte do **Tech Challenge da Pós-Graduação em Machine Learning Engineering da FIAP (Fase 1 - Grupo 21)**. O desafio mimetiza a evolução real de um produto de ML: iniciar com a exploração de dados simples e progredir até um pipeline sustentável de MLOps de código robusto.
+* ✅ **Etapa 1:** EDA (EDA + ML Canvas + Baselines), formulados nos Notebooks e registrados no MLFlow.
+* ✅ **Etapa 2:** MLP PyTorch + comparação de modelos + análise de custo logada no tracking do MLFlow.
+* ✅ **Etapa 3:** Refatoração de todo o treinamento num pipeline limpo, código modular na Pasta `src/`. API FastAPI robusta + `pytest` unitários de inferência/schemas finalizados.
+* ✅ **Etapa 4:** Model Card construído, Arquitetura e Monitoramento desenhados, README.md repaginado. Gravação do Video (STAR) executada.
 
 ---
 
@@ -147,4 +135,4 @@ Este projeto faz parte do **Tech Challenge da Pós-Graduação em Machine Learni
 
 **Grupo 21 (FIAP)**
 - **Eduardo Batista** (eduardoobatista2002@hotmail.com)
-- **Braian Montoro**
+- **Braian Montoro** (brnlmontoro@gmail.com)
