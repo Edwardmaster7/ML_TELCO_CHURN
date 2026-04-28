@@ -6,15 +6,17 @@ import os
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from src.api.schemas import ChurnPredictionRequest, ChurnPredictionResponse
 from src.api.ml_service import MLService
 from src.api.middlewares import LoggingMiddleware
+from src.config import CONFIG as settings
 
 logger = logging.getLogger(__name__)
 ml_service = MLService()
 
 MODEL_NAME = os.getenv("MODEL_NAME", "MLP_Focal_KFold_Script")
-STAGE_OR_ALIAS = os.getenv("MODEL_STAGE", "latest")
+STAGE_OR_ALIAS = os.getenv("MODEL_STAGE", "Production")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,6 +41,15 @@ app = FastAPI(
     description="Tech Challenge - ML Engineering API para inferência do modelo PyTorch (MLP_Focal_KFold)",
     version="1.0.0",
     lifespan=lifespan
+)
+
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=settings.CORS_CREDENTIALS,
+    allow_methods=settings.CORS_METHODS,
+    allow_headers=settings.CORS_HEADERS,
 )
 
 app.add_middleware(LoggingMiddleware)
