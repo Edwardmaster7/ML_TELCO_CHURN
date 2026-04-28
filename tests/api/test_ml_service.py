@@ -19,6 +19,13 @@ def mock_mlflow():
         mock_torch_model.eval = MagicMock()
         mock_mlf.pytorch.load_model.return_value = mock_torch_model
 
+        # Configura o mock do client
+        mock_client_instance = MagicMock()
+        mock_version_info = MagicMock()
+        mock_version_info.run_id = "fake_run"
+        mock_client_instance.get_latest_versions.return_value = [mock_version_info]
+        mock_mlf.tracking.MlflowClient.return_value = mock_client_instance
+
         yield mock_mlf
 
 @pytest.fixture
@@ -31,11 +38,11 @@ def mock_clean_data():
 def test_load_model_artifacts(mock_mlflow):
     """Testa o carregamento de URI do Registry pro singleton."""
     service = MLService()
-    service.load_model_artifacts(run_id="fake_run", tracking_uri="sqlite:///fake.db")
+    service.load_model_artifacts(model_name="FakeModel", stage_or_alias="latest", tracking_uri="sqlite:///fake.db")
 
     mock_mlflow.set_tracking_uri.assert_called_with("sqlite:///fake.db")
     mock_mlflow.sklearn.load_model.assert_called_with("runs:/fake_run/preprocessor")
-    mock_mlflow.pytorch.load_model.assert_called_with("runs:/fake_run/model")
+    mock_mlflow.pytorch.load_model.assert_called_with("models:/FakeModel/latest")
 
     assert service.preprocessor is not None
     assert service.model is not None
@@ -43,7 +50,7 @@ def test_load_model_artifacts(mock_mlflow):
 def test_predict_churn(mock_mlflow, mock_clean_data):
     """Valida o roteamento e predição correta do serviço acoplado."""
     service = MLService()
-    service.load_model_artifacts(run_id="fake_run")
+    service.load_model_artifacts(model_name="FakeModel", stage_or_alias="latest")
 
     payload = {
         "customerID": "123",

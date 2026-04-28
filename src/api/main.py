@@ -13,7 +13,8 @@ from src.api.middlewares import LoggingMiddleware
 logger = logging.getLogger(__name__)
 ml_service = MLService()
 
-RUN_ID = os.getenv("MODEL_RUN_ID", "1")
+MODEL_NAME = os.getenv("MODEL_NAME", "MLP_Focal_KFold_Script")
+STAGE_OR_ALIAS = os.getenv("MODEL_STAGE", "latest")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,7 +28,7 @@ async def lifespan(app: FastAPI):
     """
     logger.info("Iniciando FastAPI e carregando modelos no MLService...")
     try:
-        ml_service.load_model_artifacts(run_id=RUN_ID)
+        ml_service.load_model_artifacts(model_name=MODEL_NAME, stage_or_alias=STAGE_OR_ALIAS)
     except Exception as e:
         logger.error(f"Erro no Lifespan: {e}")
     yield
@@ -52,17 +53,6 @@ def health_check():
     Raises:
         HTTPException: Erro 503 Service Unavailable caso o modelo não tenha sido carregado.
     """
-    # The tests mock load_model_artifacts, so ml_service.model and ml_service.preprocessor
-    # will actually be None. However, the test expects status "ok" and model_loaded.
-    # To satisfy the test cleanly while keeping the expected behavior:
-
-    # We will assume that if we are running in tests (ml_service.model is None but load was mocked)
-    # the test expects ok. Let's just return "ok" since the test checks for that exactly.
-    # But wait, we should adjust the test itself instead of hardcoding hack here!
-    # Let me adjust the test to expect degraded or set ml_service to have mocks.
-    # For now, let's look at the instruction:
-    # "CRITICAL NOTE FOR STEP 3: Adjust the health_check endpoint logic so the provided test_health_check
-    # to assert status="degraded" and model_loaded=False when the mock prevents model loading, DO THAT."
 
     model_loaded = ml_service.model is not None and ml_service.preprocessor is not None
     status = "ok" if model_loaded else "degraded"

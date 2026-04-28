@@ -38,11 +38,12 @@ class MLService:
             cls._instance.device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.mps.is_available() else 'cpu')
         return cls._instance
 
-    def load_model_artifacts(self, run_id: str, tracking_uri: str = "sqlite:///mlflow.db"):
-        """Conecta ao MLflow Database e carrega artefatos do run em memória.
+    def load_model_artifacts(self, model_name: str, stage_or_alias: str = "latest", tracking_uri: str = "sqlite:///mlflow.db"):
+        """Conecta ao MLflow Database e carrega artefatos do Model Registry em memória.
 
         Args:
-            run_id (str): UUID do MLFlow Run contendo o registro do modelo de Prod.
+            model_name (str): Nome do modelo registrado no MLflow (ex: 'MLP_Focal_KFold').
+            stage_or_alias (str): Stage (ex: 'Production') ou Alias (ex: 'latest').
             tracking_uri (str, optional): Caminho local / URL do Tracking Server.
 
         Raises:
@@ -52,20 +53,38 @@ class MLService:
         mlflow.set_tracking_uri(tracking_uri)
 
         try:
-            logger.info(f"Carregando preprocessor da run {run_id}...")
+            base_uri = f"models:/{model_name}/{stage_or_alias}"
+
+            logger.info(f"Buscando metadados do Model Registry para '{model_name}' ({stage_or_alias})...")
+            client = mlflow.tracking.MlflowClient(tracking_uri=tracking_uri)
+
+            if stage_or_alias.lower() == "latest":
+                versions = client.get_latest_versions(name=model_name)
+                if not versions:
+                    raise ValueError(f"Nenhuma versão encontrada para o modelo {model_name}")
+                model_version_info = versions[0]
+            else:
+                versions = client.get_latest_versions(name=model_name, stages=[stage_or_alias])
+                if not versions:
+                    raise ValueError(f"Nenhuma versão no stage '{stage_or_alias}' para o modelo {model_name}")
+                model_version_info = versions[0]
+
+            run_id = model_version_info.run_id
+            logger.info(f"Modelo localizado com sucesso! RUN_ID resolvido: {run_id}")
+
+            logger.info("Carregando preprocessor acoplado da mesma Run...")
             preprocessor_uri = f"runs:/{run_id}/preprocessor"
             self.preprocessor = mlflow.sklearn.load_model(preprocessor_uri)
 
-            logger.info(f"Carregando PyTorch model da run {run_id}...")
-            model_uri = f"runs:/{run_id}/model"
-            self.model = mlflow.pytorch.load_model(model_uri)
+            logger.info(f"Carregando PyTorch model do Model Registry ({base_uri})...")
+            self.model = mlflow.pytorch.load_model(base_uri)
             self.model.to(self.device)
             self.model.eval()
 
             logger.info("Modelos carregados com sucesso.")
         except Exception as e:
             logger.error(f"Erro ao carregar modelos: {e}")
-            raise RuntimeError(f"Falha ao iniciar MLService: {e}")
+            raise RuntimeError(f"Falha ao iniciar MLService via Registry: {e}")
 
     def predict_churn(self, data: dict) -> dict:
         """Realiza Pipeline completa transformando payload unitário numérico em predição PyTorch.
