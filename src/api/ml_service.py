@@ -3,14 +3,13 @@
 Responsável por fazer cache (Singleton) dos modelos de produção e coordenar as inferências
 pela rede MLP_Focal_KFold do Pytorch em conjunto com pipeline baseline de Data Science.
 """
-import os
 import pandas as pd
-import numpy as np
+import logging
 import torch
 import mlflow
 import mlflow.sklearn
 import mlflow.pytorch
-import logging
+import mlflow.tracking
 
 from typing import Optional, Any
 from src.features.pipeline import clean_data
@@ -111,7 +110,9 @@ class MLService:
 
         with torch.no_grad():
             logits = self.model(features_tensor)
-            probability = torch.sigmoid(logits).cpu().numpy()[0][0]
+            # O PyTorch pode retornar shape [1, 1] ou flat [1].
+            # Acessamos corretamente para extrair o valor float da GPU/CPU
+            probability = torch.sigmoid(logits).item()
 
         prediction = 1 if probability >= 0.5 else 0
 
