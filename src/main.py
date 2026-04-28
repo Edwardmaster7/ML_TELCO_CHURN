@@ -3,14 +3,24 @@
 Responsável pelas rotas HTTP e inicialização assíncrona (Lifespan) do processo.
 """
 import os
+import sys
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.schemas import ChurnPredictionRequest, ChurnPredictionResponse
-from src.api.ml_service import MLService
-from src.api.middlewares import LoggingMiddleware
-from src.config import CONFIG as settings
+from src.core.ml_service import MLService
+from src.core.middlewares import LoggingMiddleware
+from src.core.config import CONFIG as settings
+from src.api.v1.api import router as v1_router
+
+# Configuração global de logging
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    force=True
+)
 
 logger = logging.getLogger(__name__)
 ml_service = MLService()
@@ -54,6 +64,9 @@ app.add_middleware(
 
 app.add_middleware(LoggingMiddleware)
 
+# Adiciona rotas da API
+app.include_router(v1_router, prefix="/api/v1")
+
 @app.get("/health")
 def health_check():
     """Verifica a saúde básica do contêiner e prontidão dos artefatos scikit/torch.
@@ -69,27 +82,3 @@ def health_check():
     status = "ok" if model_loaded else "degraded"
 
     return {"status": status, "model_loaded": model_loaded}
-
-@app.post("/predict", response_model=ChurnPredictionResponse)
-def predict(request: ChurnPredictionRequest):
-    """Invoca as pipelines de predição do modelo campeão (Pytorch Focal Loss).
-
-    Args:
-        request (ChurnPredictionRequest): Payload pydantic contendo atributos em string, inteiro ou float da operadora.
-
-    Returns:
-        ChurnPredictionResponse: Resposta serializada garantindo que um número real e a predição chegam no cliente.
-
-    Raises:
-        HTTPException: 503 Se ocorrer Runtime de Modelos offline.
-        HTTPException: 500 Se ocorrer uma quebra silenciosa e imprevista do pandas.
-    """
-    try:
-        result = ml_service.predict_churn(request.model_dump())
-        return result
-    except RuntimeError as re:
-        logger.error(f"RuntimeError na predição: {re}")
-        raise HTTPException(status_code=503, detail=str(re))
-    except Exception as e:
-        logger.error(f"Erro inesperado na predição: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error during inference.")

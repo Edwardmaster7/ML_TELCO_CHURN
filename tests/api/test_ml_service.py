@@ -4,12 +4,12 @@ import numpy as np
 import torch
 from unittest.mock import patch, MagicMock
 
-from src.api.ml_service import MLService
+from src.core.ml_service import MLService
 
 @pytest.fixture
 def mock_mlflow():
     """Mock da dependência física do Registry MLFlow."""
-    with patch("src.api.ml_service.mlflow") as mock_mlf:
+    with patch("src.core.ml_service.mlflow") as mock_mlf:
         mock_preprocessor = MagicMock()
         mock_preprocessor.transform.return_value = np.array([[0.5, 1.2, 0.0, 1.0]])
         mock_mlf.sklearn.load_model.return_value = mock_preprocessor
@@ -31,7 +31,7 @@ def mock_mlflow():
 @pytest.fixture
 def mock_clean_data():
     """Mock da função data-centric."""
-    with patch("src.api.ml_service.clean_data") as mock_clean:
+    with patch("src.core.ml_service.clean_data") as mock_clean:
         mock_clean.side_effect = lambda df: df
         yield mock_clean
 

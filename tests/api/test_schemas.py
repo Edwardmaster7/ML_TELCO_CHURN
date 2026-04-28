@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from src.api.schemas import ChurnPredictionRequest, ChurnPredictionResponse
+from src.core.schemas import ChurnPredictionRequest, ChurnPredictionResponse
 
 def test_valid_request_schema():
     """Testa se o schema request aceita dados válidos rigorosamente.

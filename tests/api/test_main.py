@@ -2,8 +2,8 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 
-with patch("src.api.ml_service.MLService.load_model_artifacts") as mock_load:
-    from src.api.main import app
+with patch("src.core.ml_service.MLService.load_model_artifacts") as mock_load:
+    from src.main import app
 
 @pytest.fixture
 def client():
@@ -13,13 +13,13 @@ def client():
 
 def test_health_check(client):
     """Testa o endpoint de readiness que atesta se a rede neural subiu na API."""
-    with patch("src.api.main.ml_service.model", True), patch("src.api.main.ml_service.preprocessor", True):
+    with patch("src.main.ml_service.model", True), patch("src.main.ml_service.preprocessor", True):
         response = client.get("/health")
         assert response.status_code == 200
         assert response.json()["status"] == "ok"
         assert response.json().get("model_loaded") is True
 
-@patch("src.api.ml_service.MLService.predict_churn")
+@patch("src.core.ml_service.MLService.predict_churn")
 def test_predict_endpoint_success(mock_predict, client):
     """Smoke test da rota de predição injetando payload JSON perfeito."""
     mock_predict.return_value = {"churn_probability": 0.85, "churn_prediction": 1}
@@ -47,7 +47,7 @@ def test_predict_endpoint_success(mock_predict, client):
         "TotalCharges": "29.85"
     }
 
-    response = client.post("/predict", json=payload)
+    response = client.post("/api/v1/predict", json=payload)
 
     assert response.status_code == 200
     data = response.json()
@@ -61,7 +61,7 @@ def test_predict_endpoint_validation_error(client):
         "gender": "Female"
     }
 
-    response = client.post("/predict", json=payload)
+    response = client.post("/api/v1/predict", json=payload)
 
     assert response.status_code == 422
     assert "detail" in response.json()

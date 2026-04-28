@@ -2,7 +2,7 @@ import pytest
 import logging
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from src.api.middlewares import LoggingMiddleware
+from src.core.middlewares import LoggingMiddleware
 
 def test_logging_middleware_records_latency(caplog):
     """Testa se o middleware injeta com sucesso um log de monitoramento.

@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from src.config import CONFIG
+from src.core.config import CONFIG
 from src.data.loader import load_and_merge_data
 from src.features.pipeline import clean_data, get_preprocessor, prepare_target
 from src.models.architectures import ChurnMLP, FocalLoss

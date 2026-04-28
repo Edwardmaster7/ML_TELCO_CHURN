@@ -40,6 +40,8 @@ class ProjectConfig:
     mlflow_tracking_uri: str = "http://127.0.0.1:5000"
     mlflow_experiment_name: str = "03_Refactor_Src"
 
+    os.environ["MLFLOW_RECORD_ENV_VARS_IN_MODEL_LOGGING"] = "false"
+
     # Hiperparâmetros Campeões (Focal Loss + K-Fold) extraídos do notebook 06 (Trial 5)
     best_params: dict = field(default_factory=lambda: {
         'dropout_rate': 0.385,

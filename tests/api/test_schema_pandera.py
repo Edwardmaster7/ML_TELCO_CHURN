@@ -3,14 +3,14 @@ import pandas as pd
 import pandera as pa
 from fastapi.testclient import TestClient
 from unittest.mock import patch
-from src.api.main import app
+from src.main import app
 
 output_schema = pa.DataFrameSchema({
     "churn_probability": pa.Column(float, pa.Check.in_range(0.0, 1.0)),
     "churn_prediction": pa.Column(int, pa.Check.isin([0, 1]))
 })
 
-@patch("src.api.ml_service.MLService.predict_churn")
+@patch("src.core.ml_service.MLService.predict_churn")
 def test_api_output_respects_pandera_schema(mock_predict):
     """Testa se o retorno serializado da API REST é complacente ao schema numérico Pandas (Pandera).
 
@@ -43,7 +43,7 @@ def test_api_output_respects_pandera_schema(mock_predict):
             "TotalCharges": "29.85"
         }
 
-        response = client.post("/predict", json=payload)
+        response = client.post("/api/v1/predict", json=payload)
 
     assert response.status_code == 200
     df_output = pd.DataFrame([response.json()])
