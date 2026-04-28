@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 ml_service = MLService()
 
 MODEL_NAME = os.getenv("MODEL_NAME", "MLP_Focal_KFold_Script")
-STAGE_OR_ALIAS = os.getenv("MODEL_STAGE", "Production")
+STAGE_OR_ALIAS = os.getenv("MODEL_STAGE", "production")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

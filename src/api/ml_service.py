@@ -37,12 +37,12 @@ class MLService:
             cls._instance.device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.mps.is_available() else 'cpu')
         return cls._instance
 
-    def load_model_artifacts(self, model_name: str, stage_or_alias: str = "latest", tracking_uri: str = "sqlite:///mlflow.db"):
+    def load_model_artifacts(self, model_name: str, stage_or_alias: str = "production", tracking_uri: str = "sqlite:///mlflow.db"):
         """Conecta ao MLflow Database e carrega artefatos do Model Registry em memória.
 
         Args:
             model_name (str): Nome do modelo registrado no MLflow (ex: 'MLP_Focal_KFold').
-            stage_or_alias (str): Stage (ex: 'Production') ou Alias (ex: 'latest').
+            stage_or_alias (str): Alias (ex: 'production' ou 'latest').
             tracking_uri (str, optional): Caminho local / URL do Tracking Server.
 
         Raises:
@@ -52,21 +52,17 @@ class MLService:
         mlflow.set_tracking_uri(tracking_uri)
 
         try:
-            base_uri = f"models:/{model_name}/{stage_or_alias}"
+            # Novo formato de URI do Model Registry para Aliases
+            base_uri = f"models:/{model_name}@{stage_or_alias}"
 
-            logger.info(f"Buscando metadados do Model Registry para '{model_name}' ({stage_or_alias})...")
+            logger.info(f"Buscando metadados do Model Registry para '{model_name}' (Alias: {stage_or_alias})...")
             client = mlflow.tracking.MlflowClient(tracking_uri=tracking_uri)
 
-            if stage_or_alias.lower() == "latest":
-                versions = client.get_latest_versions(name=model_name)
-                if not versions:
-                    raise ValueError(f"Nenhuma versão encontrada para o modelo {model_name}")
-                model_version_info = versions[0]
-            else:
-                versions = client.get_latest_versions(name=model_name, stages=[stage_or_alias])
-                if not versions:
-                    raise ValueError(f"Nenhuma versão no stage '{stage_or_alias}' para o modelo {model_name}")
-                model_version_info = versions[0]
+            # Nova abordagem de busca do MLflow >2.9.0 (Aliases em vez de Stages)
+            model_version_info = client.get_model_version_by_alias(
+                name=model_name,
+                alias=stage_or_alias
+            )
 
             run_id = model_version_info.run_id
             logger.info(f"Modelo localizado com sucesso! RUN_ID resolvido: {run_id}")
@@ -82,7 +78,7 @@ class MLService:
 
             logger.info("Modelos carregados com sucesso.")
         except Exception as e:
-            logger.error(f"Erro ao carregar modelos: {e}")
+            logger.error(f"Erro ao carregar modelos via Registry: {e}")
             raise RuntimeError(f"Falha ao iniciar MLService via Registry: {e}")
 
     def predict_churn(self, data: dict) -> dict:
