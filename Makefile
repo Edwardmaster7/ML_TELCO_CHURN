@@ -1,4 +1,10 @@
-.PHONY: help test run train docker-up docker-down mlflow-ui
+.PHONY: help test run train mlflowui db-upgrade
+
+# Variáveis de comando customizáveis
+# Ex: make train ARGS="--epochs 10"
+ARGS ?= --epochs 5
+MLFLOW_DB_URI ?= sqlite:///mlflow.db
+UV_RUN ?= uv run
 
 help:
 	@echo "======================================================================"
@@ -9,26 +15,25 @@ help:
 	@echo "  make help       - Mostra esta mensagem de ajuda"
 	@echo "  make test       - Executa toda a suíte de testes com Pytest"
 	@echo "  make run        - Inicia o servidor FastAPI em modo de desenvolvimento"
-	@echo "  make train      - Executa o script de treinamento do modelo"
-	@echo "  make mlflow-ui  - Inicia a interface do MLflow localmente"
-	@echo "  make docker-up  - Sobe os serviços via Docker Compose (build e background)"
-	@echo "  make docker-down- Para e remove os serviços do Docker Compose"
+	@echo "  make train      - Executa o treinamento do modelo."
+	@echo "                    Argumentos suportados via ARGS: --epochs, --customers, --services, --contracts"
+	@echo "                    (Padrão: ARGS=\"--epochs 5\"). Ex: make train ARGS=\"--epochs 10\""
+	@echo "  make mlflowui  - Inicia a interface do MLflow localmente"
 	@echo ""
 
+
 test:
-	uv run pytest tests/ -v
+	$(UV_RUN) pytest tests/ -v
+
+db-upgrade:
+	$(UV_RUN) mlflow db upgrade $(MLFLOW_DB_URI)
 
 run:
-	uv run fastapi dev src/main.py
+	uv sync && $(MAKE) db-upgrade && $(UV_RUN) uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
 train:
-	MLFLOW_TRACKING_URI=sqlite:///mlflow.db PYTHONPATH=. uv run python src/models/train.py --epochs 5
+	@echo "Executando treinamento com argumentos: $(ARGS)"
+	uv sync && $(MAKE) db-upgrade && MLFLOW_TRACKING_URI=$(MLFLOW_DB_URI) PYTHONPATH=. $(UV_RUN) python src/models/train.py $(ARGS)
 
-mlflow-ui:
-	uv run mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5001
-
-docker-up:
-	docker compose up --build -d
-
-docker-down:
-	docker compose down
+mlflowui:
+	uv sync && $(MAKE) db-upgrade && $(UV_RUN) mlflow ui --backend-store-uri $(MLFLOW_DB_URI) --port 5001
