@@ -70,7 +70,7 @@ ML_TELCO_CHURN/
 ### Engenharia de ML e Dev Tools
 - **MLflow:** Rastreamento de métricas, parâmetros e Model Registry.
 - **FastAPI / Pydantic:** Disponibilização da Inference API com validação forte em runtime.
-- **uv / pip:** Gerenciamento rápido de dependências Python.
+- **uv:** Gerenciamento rápido de dependências Python.
 - **Ruff e Pytest:** Linters e testes automatizados.
 
 ---

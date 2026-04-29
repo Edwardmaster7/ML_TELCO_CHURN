@@ -40,6 +40,7 @@ Essenciais para a execução do modelo e serviço:
 | Ação | Comando |
 |---|---|
 | Instalação Inicial | `uv sync` |
+| Adicionar Dependência | `uv add <pacote>` |
 | Rodar Notebooks | `uv run --group eda jupyter lab` |
 | Rodar Linting | `uv run ruff check .` |
 | Rodar Testes | `uv run pytest` |

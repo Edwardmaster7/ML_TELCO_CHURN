@@ -4,7 +4,7 @@ Este arquivo serve como base para orientar o desenvolvimento e as interações c
 
 ## Comandos de Setup
 - **Ativar o ambiente virtual:** `source venv/bin/activate` (ou ative o ambiente conda correspondente caso esteja utilizando o Anaconda/Miniconda)
-- **Instalar dependências:** `pip install -r requirements.txt`
+- **Instalar dependências:** `uv sync`
 
 ## Comandos de Teste
 - **Executar a suíte de testes:** `pytest tests/`
