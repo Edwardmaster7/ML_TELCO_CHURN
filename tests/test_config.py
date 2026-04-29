@@ -1,5 +1,5 @@
 import pytest
-from core.config import CONFIG
+from src.core.config import CONFIG
 
 def test_config_best_params_updated():
     # Verifica se os hiperparâmetros refletem o Trial 5 do KFold do nb 06
