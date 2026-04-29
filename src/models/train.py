@@ -178,7 +178,7 @@ def main():
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(CONFIG.mlflow_experiment_name)
 
-    pip_reqs = ["scikit-learn==1.3.2", "skops==0.8.0"] # Ajustado aos reqs do projeto (substitua conforme requirements.txt se necessário)
+    pip_reqs = ["scikit-learn>=1.8.0", "skops>=0.13.0"] # Ajustado aos reqs do projeto
 
     with mlflow.start_run(run_name="MLP_Focal_KFold_Production"):
         # Loga os hiperparâmetros definidos do K-Fold
@@ -217,7 +217,7 @@ def main():
             name="model",
             registered_model_name="MLP_Focal_KFold_Script",
             signature=sig,
-            pip_requirements=["torch==2.1.0"] # Ajustado aos reqs (substitua conforme o venv se diferir muito)
+            pip_requirements=["torch>=2.11.0"] # Ajustado aos reqs do projeto
         )
 
         logger.info("Modelo (Focal Loss + K-Fold) e métricas registradas no MLflow.")
