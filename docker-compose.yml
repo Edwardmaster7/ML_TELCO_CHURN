@@ -11,14 +11,13 @@ services:
       - ./mlflow.db:/app/mlflow.db
     working_dir: /app
     command: >
-      sh -c "uv pip install mlflow &&
-             uv run mlflow server
+      sh -c "uv run mlflow server
              --backend-store-uri sqlite:///mlflow.db
              --default-artifact-root /app/mlruns
              --host 0.0.0.0
              --port 5000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "python3", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 5000))"]
       interval: 10s
       timeout: 5s
       retries: 5

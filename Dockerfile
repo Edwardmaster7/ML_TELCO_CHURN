@@ -27,8 +27,9 @@ ENV PYTHONPATH="/app"
 # Copiar ambiente virtual do builder
 COPY --from=builder /app/.venv /app/.venv
 
-# Copiar o código fonte
+# Copiar o código fonte e dados necessários
 COPY src /app/src
+COPY notebooks/data/raw /app/notebooks/data/raw
 
 # Expor porta da API
 EXPOSE 8000
