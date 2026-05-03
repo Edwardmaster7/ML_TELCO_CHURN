@@ -11,6 +11,7 @@ import mlflow.sklearn
 import mlflow.pytorch
 import mlflow.tracking
 
+from datetime import datetime, timezone
 from typing import Optional, Any
 from src.features.pipeline import clean_data
 
@@ -23,11 +24,19 @@ class MLService:
         preprocessor (object): objeto Scikit-Learn fitado baixado do Tracking Server.
         model (torch.nn.Module): objeto torch baixado do Tracking Server.
         device (torch.device): device local disponível ('cuda' ou 'cpu').
+        model_name (str): Nome do modelo registrado no MLflow.
+        model_version (str): Versão do modelo carregado (número de versão do Registry).
+        run_id (str): Run ID do MLflow associado ao modelo em produção.
+        loaded_at (datetime): Timestamp UTC de quando os artefatos foram carregados.
     """
     _instance = None
     preprocessor: Optional[Any] = None
     model: Optional[torch.nn.Module] = None
     device: Optional[torch.device] = None
+    model_name: Optional[str] = None
+    model_version: Optional[str] = None
+    run_id: Optional[str] = None
+    loaded_at: Optional[datetime] = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -35,6 +44,10 @@ class MLService:
             cls._instance.preprocessor = None
             cls._instance.model = None
             cls._instance.device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.mps.is_available() else 'cpu')
+            cls._instance.model_name = None
+            cls._instance.model_version = None
+            cls._instance.run_id = None
+            cls._instance.loaded_at = None
         return cls._instance
 
     def load_model_artifacts(self, model_name: str, stage_or_alias: str = "production", tracking_uri: str = "sqlite:///mlflow.db"):
@@ -75,6 +88,12 @@ class MLService:
             self.model = mlflow.pytorch.load_model(base_uri)
             self.model.to(self.device)
             self.model.eval()
+
+            # Armazena metadados para /health e logging estruturado
+            self.model_name = model_name
+            self.model_version = model_version_info.version
+            self.run_id = run_id
+            self.loaded_at = datetime.now(timezone.utc)
 
             logger.info("Modelos carregados com sucesso.")
         except Exception as e:
