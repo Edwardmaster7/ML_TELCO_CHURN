@@ -1,0 +1,97 @@
+# configs/monitoring.yaml — Configuração do sistema de monitoramento
+# Todos os thresholds e paths são sobrescrevíveis via variáveis de ambiente ou CLI.
+
+# ─────────────────────────────────────────────
+# Drift Detection — Thresholds
+# ─────────────────────────────────────────────
+drift:
+  # PSI (Population Stability Index) — features numéricas
+  psi_warning: 0.10    # Mudança moderada — investigar
+  psi_critical: 0.20   # Mudança severa — retreinar
+
+  # KS Test (Kolmogorov-Smirnov) — features numéricas
+  ks_warning: 0.05     # KS statistic > 0.05 = atenção
+  ks_critical: 0.10    # KS statistic > 0.10 = alerta
+
+  # Chi-Square Test — features categóricas
+  chi2_pvalue_warning: 0.10   # p-value < 0.10 = atenção
+  chi2_pvalue_critical: 0.05  # p-value < 0.05 = alerta
+
+  # Jensen-Shannon Divergence — distribuição de churn_probability
+  jsd_warning: 0.10    # JSD > 0.10 = atenção
+  jsd_critical: 0.15   # JSD > 0.15 = alerta
+
+  # Missing Rate — taxa de nulos por campo
+  missing_rate_warning: 0.005  # > 0.5% NaN = atenção
+  missing_rate_critical: 0.01  # > 1.0% NaN = alerta
+
+  # Janela de tempo para coletar dados de produção
+  window_days: 7
+
+  # Número mínimo de amostras para calcular drift
+  min_samples: 100
+
+# ─────────────────────────────────────────────
+# Performance Monitoring — Thresholds
+# ─────────────────────────────────────────────
+performance:
+  # PR-AUC (métrica primária do modelo)
+  pr_auc_warning: 0.65    # < 0.65 = atenção
+  pr_auc_critical: 0.60   # < 0.60 = retreinar urgente (baseline: ~0.693)
+
+  # F1-Score (no limiar 0.5)
+  f1_warning: 0.55
+  f1_critical: 0.50
+
+  # Recall (sensibilidade ao churn)
+  recall_warning: 0.60
+  recall_critical: 0.55
+
+  # Precision
+  precision_warning: 0.55
+
+  # Churn rate predito (% de predições == 1)
+  churn_rate_max_warning: 0.40  # > 40% por 3 dias = alerta
+  churn_rate_min_warning: 0.10  # < 10% por 3 dias = suspeito
+
+  # Janela de avaliação com ground truth
+  window_days: 30
+
+  # Número mínimo de amostras com ground truth
+  min_samples_with_label: 50
+
+# ─────────────────────────────────────────────
+# Baseline — Referência de treino
+# ─────────────────────────────────────────────
+baseline:
+  # Nome do modelo no MLflow Registry (para carregar artefatos)
+  mlflow_model_name: "MLP_Focal_KFold_Script"
+  mlflow_alias: "production"
+
+  # Artefato do baseline salvo durante o treino
+  artifact_name: "training_baseline.json"
+
+  # Fallback: arquivo local caso MLflow não esteja acessível
+  fallback_path: "configs/monitoring_baseline.json"
+
+# ─────────────────────────────────────────────
+# MLflow — Configuração de tracking para monitoramento
+# ─────────────────────────────────────────────
+mlflow:
+  tracking_uri: "sqlite:///mlflow.db"
+  experiment_name: "monitoring"
+
+# ─────────────────────────────────────────────
+# Outputs — Onde os relatórios são salvos
+# ─────────────────────────────────────────────
+output:
+  drift_reports_dir: "monitoring/reports/drift"
+  performance_reports_dir: "monitoring/reports/performance"
+  alert_reports_dir: "monitoring/reports/alerts"
+
+# ─────────────────────────────────────────────
+# Logging
+# ─────────────────────────────────────────────
+logging:
+  level: "INFO"
+  format: "json"  # "json" ou "text"
