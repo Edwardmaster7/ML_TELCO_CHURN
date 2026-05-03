@@ -1,121 +1,68 @@
 # ML Telco Churn — Previsão de Cancelamento de Clientes via MLP PyTorch
 
-> Pipeline completo de ML end-to-end: do EDA ao serving em produção com FastAPI + MLflow, aplicado ao problema de churn em telecomunicações.
+![Python ≥3.13](https://img.shields.io/badge/python-%E2%89%A53.13-blue)
+![MLflow 3.11.1](https://img.shields.io/badge/MLflow-3.11.1-orange)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.135%2B-green)
+![uv](https://img.shields.io/badge/gerenciador-uv-purple)
+![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-lightgrey)
 
----
-
-## Índice
-
-1. [Visão Geral](#visão-geral)
-2. [Funcionalidades Principais](#funcionalidades-principais)
-3. [Como Funciona — Arquitetura em Alto Nível](#como-funciona--arquitetura-em-alto-nível)
-4. [Estrutura do Repositório](#estrutura-do-repositório)
-5. [Pré-requisitos](#pré-requisitos)
-6. [Instalação](#instalação)
-7. [Quickstart](#quickstart)
-8. [Como Usar](#como-usar)
-   - [Treinamento](#treinamento)
-   - [MLflow UI](#mlflow-ui)
-   - [API de Inferência](#api-de-inferência)
-   - [Docker](#docker)
-9. [Observabilidade e Monitoramento](#observabilidade-e-monitoramento)
-   - [Stack de Observabilidade](#stack-de-observabilidade)
-   - [Endpoints de Monitoramento](#endpoints-de-monitoramento)
-   - [CLIs de Monitoramento](#clis-de-monitoramento)
-   - [Feedback Loop](#feedback-loop)
-10. [Configuração](#configuração)
-10. [Dados](#dados)
-11. [Experimentos e Rastreabilidade](#experimentos-e-rastreabilidade)
-12. [Qualidade de Código e Testes](#qualidade-de-código-e-testes)
-13. [Contribuição](#contribuição)
-14. [Padrões de Branch e Commit](#padrões-de-branch-e-commit)
-15. [Segurança e Privacidade](#segurança-e-privacidade)
-16. [Documentação Adicional](#documentação-adicional)
-17. [Roadmap](#roadmap)
-18. [Autores](#autores)
-19. [Licença](#licença)
+Pipeline completo de ML end-to-end: do EDA ao serving em produção com FastAPI + MLflow, aplicado ao problema de churn em telecomunicações.
 
 ---
 
 ## Visão Geral
 
-Este projeto implementa um **pipeline profissional de Machine Learning** para classificação binária de churn em uma empresa de telecomunicações, utilizando o dataset público [IBM Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn).
+**Problema:** Empresas de telecom perdem clientes sem identificá-los a tempo. Reter um cliente custa ~10× menos que adquirir um novo.
 
-### O Problema
+**Solução:** Classificador binário que prevê a probabilidade de churn de cada cliente, permitindo campanhas de retenção proativas.
 
-Empresas de telecom enfrentam alta taxa de cancelamento. Reter um cliente custa ~10× menos do que adquirir um novo. O objetivo é **identificar proativamente** quais clientes têm alta probabilidade de cancelar o contrato, permitindo ações de retenção direcionadas (ofertas, upgrades, contato de CS).
-
-### O Alvo
-
-| Valor         | Significado                 |
-| ------------- | --------------------------- |
-| `Churn = 0` | Cliente permanece ativo     |
-| `Churn = 1` | Cliente propenso a cancelar |
-
-A saída do modelo é uma **probabilidade de churn** (`churn_probability` ∈ [0.0, 1.0]) e uma **predição binária** (`churn_prediction` ∈ {0, 1}) com limiar em 0.5. A otimização é custo-sensível: falso negativo custa $ 10 (cliente perdido), falso positivo custa $ 1 (desconto desnecessário).
-
-> **Nota técnica:** O problema é **classificação binária**. Métricas de regressão (MAE, RMSE, R²) não se aplicam. A métrica primária é **PR-AUC** (área sob a curva Precision-Recall), que é robusta ao desbalanceamento de classes (~74% / ~26%).
+| Campo | Valor |
+|---|---|
+| Dataset | [IBM Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn) (~7 043 clientes, 3 CSVs) |
+| Modelo | `MLP_Focal_KFold_Script` — MLP PyTorch com Focal Loss + StratifiedKFold(3) |
+| Métrica primária | PR-AUC = **0.6539** (holdout de 20%) |
+| Serving | FastAPI + MLflow Model Registry — alias `@production` |
 
 ---
 
-## Funcionalidades Principais
+## Arquitetura
 
-- **EDA e engenharia de features** com notebooks documentados progressivamente (`notebooks/`)
-- **Arquitetura MLP PyTorch** com Focal Loss, BatchNorm, Dropout e Early Stopping
-- **Otimização de hiperparâmetros** com Optuna + validação cruzada StratifiedKFold(3)
-- **Preprocessor Scikit-Learn** persistido via MLflow (sem vazamento treino→inferência)
-- **API REST de inferência** com FastAPI, validação Pydantic estrita e logging estruturado
-- **MLflow Model Registry** com aliases de versão (`@production`)
-- **Containerização completa** com Docker multi-stage + Docker Compose
-- **Observabilidade completa**: logging JSON estruturado, métricas Prometheus, `/metrics` endpoint, rastreamento de predições em SQLite
-- **Feedback loop**: endpoint `POST /feedback/{customer_id}` para registrar ground truth de churn
-- **Detecção de drift**: PSI, KS-test, chi-square e JSD via `src/monitoring/drift_detector.py`
-- **Monitoramento de performance**: avaliação periódica com janela deslizante de 30 dias
-- **Stack de observabilidade**: Prometheus (porta 9090) + Grafana (porta 3000)
+```mermaid
+flowchart LR
+    subgraph TREINO
+        A[3 CSVs brutos] --> B["loader.py\nmerge por customerID"]
+        B --> C["pipeline.py\nclean_data + preprocessor"]
+        C --> D["train.py\nStratifiedKFold × Focal Loss"]
+        D --> E[("MLflow Registry\nalias @production")]
+    end
+    subgraph SERVING
+        E --> F["FastAPI :8000\nMLService.load_artifacts"]
+        G[Cliente HTTP] -- "POST /api/v1/predict" --> F
+        F --> H["{churn_probability: 0.83\nchurn_prediction: 1}"]
+    end
+    subgraph OBSERVABILIDADE
+        F -- "/metrics" --> I[Prometheus :9090]
+        I --> J[Grafana :3000]
+    end
+```
 
 ---
 
-## Como Funciona — Arquitetura em Alto Nível
+## Stack Tecnológica
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  TREINO (src/models/train.py)                                    │
-│                                                                  │
-│  3 CSVs → merge → clean_data() → ColumnTransformer.fit()        │
-│         → StratifiedKFold(3) × train_focal_model()              │
-│         → MLflow: log_params + log_metrics + log_model()        │
-│         → Model Registry: alias @production                     │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │ artefatos em mlruns/ + mlflow.db
-                           ▼
-┌──────────────────────────────────────────────────────────────────┐
-│  SERVING (src/main.py — FastAPI)                                 │
-│                                                                  │
-│  startup → MLService.load_model_artifacts(@production)          │
-│                                                                  │
-│  POST /api/v1/predict                                           │
-│    → Pydantic validate → clean_data() → preprocessor.transform()│
-│    → ChurnMLP.forward() → sigmoid → threshold 0.5              │
-│    → {"churn_probability": 0.83, "churn_prediction": 1}        │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-**Stack tecnológica:**
-
-| Camada                | Tecnologia        | Versão mínima |
-| --------------------- | ----------------- | --------------- |
-| Linguagem             | Python           | ≥ 3.13         |
-| Deep Learning         | PyTorch          | ≥ 2.11.0       |
-| Preprocessamento      | Scikit-Learn     | ≥ 1.8.0        |
-| Hyperparameter Tuning | Optuna           | ≥ 4.8.0        |
-| MLOps / Registry      | MLflow           | 3.11.1         |
-| API Framework         | FastAPI          | ≥ 0.135.2      |
-| ASGI Server           | Uvicorn          | ≥ 0.42.0       |
-| Validação de Schema   | Pydantic         | ≥ 2.12.5       |
-| Gerenciamento de deps | uv               | qualquer       |
-| Containerização       | Docker + Compose | —              |
-| Lint / Format         | Ruff             | ≥ 0.15.7       |
-| Testes                | Pytest + Pandera | ≥ 9.0.2        |
+| Camada | Tecnologia | Versão mínima |
+|---|---|---|
+| Linguagem | Python | ≥ 3.13 |
+| Deep Learning | PyTorch | ≥ 2.11.0 |
+| Preprocessamento | Scikit-Learn | ≥ 1.8.0 |
+| Hyperparameter Tuning | Optuna | ≥ 4.8.0 |
+| MLOps / Registry | MLflow | 3.11.1 |
+| API Framework | FastAPI | ≥ 0.135.2 |
+| ASGI Server | Uvicorn | ≥ 0.42.0 |
+| Gerenciamento de deps | uv | qualquer |
+| Containerização | Docker + Compose | — |
+| Lint / Format | Ruff | ≥ 0.15.7 |
+| Testes | Pytest + Pandera | ≥ 9.0.2 |
 
 ---
 
@@ -828,77 +775,7 @@ uv run ruff check src/ tests/ && uv run pytest tests/ -v
 
 ## Contribuição
 
-### Fluxo de Contribuição
-
-1. Abra uma **Issue** descrevendo o bug ou a feature antes de começar a implementação.
-2. Faça fork ou crie uma branch a partir de `main` seguindo o padrão abaixo.
-3. Implemente as mudanças, adicionando ou atualizando testes conforme necessário.
-4. Execute a suíte completa: `uv run ruff check src/ tests/ && make test`
-5. Abra um **Pull Request** com descrição clara e checklist preenchido.
-
-### Checklist de PR
-
-```markdown
-## Checklist
-
-- [ ] O código passa em `ruff check src/ tests/` sem erros
-- [ ] Todos os testes existentes continuam passando (`make test`)
-- [ ] Novos comportamentos possuem testes correspondentes
-- [ ] Caminhos de arquivos e configs referenciados no PR existem no repo
-- [ ] Se o modelo foi retreinado: métricas documentadas e comparadas com a versão anterior no MLflow
-- [ ] Se feature de ML adicionada: sem data leakage (fit apenas no X_train)
-- [ ] Se mudança arquitetural: ADR criado em `docs/specs/adrs/`
-- [ ] Se mudança de deploy: `docs/DEPLOYMENT_ARCHITECTURE.md` atualizado
-- [ ] Mensagem de commit em pt-BR seguindo Conventional Commits
-```
-
----
-
-## Padrões de Branch e Commit
-
-### Branches
-
-```
-main              ← branch principal (protegida)
-feat/<descricao>  ← novas funcionalidades
-fix/<descricao>   ← correções de bugs
-chore/<descricao> ← manutenção, atualizações de deps
-docs/<descricao>  ← documentação
-experiment/<descricao>  ← experimentos de modelo/features
-```
-
-### Commits — Conventional Commits em pt-BR
-
-**Regra obrigatória deste repositório:** todas as mensagens de commit devem ser escritas em **Português (pt-BR)**.
-
-```
-<tipo>: <descrição curta em pt-BR>
-
-[corpo opcional com contexto]
-[footer com referência à issue: Closes #123]
-```
-
-**Tipos válidos:**
-
-| Tipo            | Quando Usar                                            |
-| --------------- | ------------------------------------------------------ |
-| `feat:`       | Nova funcionalidade                                    |
-| `fix:`        | Correção de bug                                      |
-| `chore:`      | Atualização de deps, configs, sem mudança funcional |
-| `docs:`       | Documentação                                         |
-| `test:`       | Adição ou correção de testes                       |
-| `refactor:`   | Refatoração sem mudança de comportamento            |
-| `experiment:` | Novo experimento de ML (notebooks, scripts de tuning)  |
-
-**Exemplos:**
-
-```bash
-git commit -m "feat: adicionar endpoint de feedback de predição"
-git commit -m "fix: corrigir cálculo de is_high_spender usando q75 do treino"
-git commit -m "chore: atualizar mlflow para versão 3.11.1"
-git commit -m "docs: criar ADR-010 sobre estratégia de rollback"
-git commit -m "experiment: testar ResNet com embeddings de features categóricas"
-```
+Veja [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo completo, convenções de branch, padrão de commits e checklist de PR.
 
 ---
 
@@ -928,21 +805,21 @@ git commit -m "experiment: testar ResNet com embeddings de features categóricas
 
 ## Roadmap
 
-| Status | Item                                                       |
-| ------ | ---------------------------------------------------------- |
-| ✅     | EDA + ML Canvas + Baselines Scikit-Learn                   |
-| ✅     | MLP PyTorch com Focal Loss + Optuna + KFold                |
-| ✅     | Feature engineering avançada (6 features derivadas)       |
-| ✅     | Refatoração modular em `src/` com testes Pytest        |
-| ✅     | API FastAPI com validação Pydantic + MLflow Registry     |
-| ✅     | Containerização Docker multi-stage + Docker Compose      |
-| ✅     | Model Card, Arquitetura de Deploy e Plano de Monitoramento |
-| 🔲     | Correção do bug `is_high_spender` (q75 fixo do treino) |
-| 🔲     | GitHub Actions CI (lint + test + build)                    |
-| 🔲     | Tabela `PredictionLog` para coleta de ground truth       |
-| 🔲     | Endpoint `POST /api/v1/feedback/{customer_id}`           |
-| 🔲     | Drift detection com Evidently (script periódico)          |
-| 🔲     | DVC para versionamento de dados                            |
+| Status | Item |
+|---|---|
+| ✅ | EDA + ML Canvas + Baselines Scikit-Learn |
+| ✅ | MLP PyTorch com Focal Loss + Optuna + KFold |
+| ✅ | Feature engineering avançada (6 features derivadas) |
+| ✅ | Refatoração modular em `src/` com testes Pytest |
+| ✅ | API FastAPI com validação Pydantic + MLflow Registry |
+| ✅ | Containerização Docker multi-stage + Docker Compose |
+| ✅ | Model Card, Arquitetura de Deploy e Plano de Monitoramento |
+| ✅ | Observabilidade: logging JSON, Prometheus, Grafana |
+| ✅ | Feedback loop (`POST /api/v1/feedback/{customer_id}`) |
+| ✅ | Drift detection (PSI, KS, chi-square, JSD) |
+| 🔲 | Correção do bug `is_high_spender` (q75 fixo do treino) |
+| 🔲 | GitHub Actions CI (lint + test + build) |
+| 🔲 | DVC para versionamento de dados |
 
 ---
 
@@ -957,4 +834,4 @@ git commit -m "experiment: testar ResNet com embeddings de features categóricas
 
 ## Licença
 
-TBD —  Para uso interno (Tech Challenge FIAP), todos os direitos reservados aos autores.
+Este projeto está licenciado sob a [MIT License](LICENSE).

@@ -1,7 +1,10 @@
-# Diretrizes e Decisões de Modelagem: Previsão de Churn
+# Decisões de Projeto — ML Telco Churn
 
-## Visão Geral
-Este documento consolida as decisões arquiteturais, estratégicas e as restrições impostas pelo **Tech Challenge**, detalhando o caminho percorrido através da evolução do código (notebooks 01 a 05) e as próximas etapas na modelagem de Churn para o dataset IBM Telco.
+> **Tipo:** Narrativa histórica de decisões arquiteturais e de modelagem
+> **Projeto:** Tech Challenge Fase 01 — ML Engineering (FIAP Pós-Tech, Grupo 21)
+> **Atualizado em:** 2026-05-02
+
+Este documento consolida as decisões arquiteturais, estratégicas e as restrições impostas pelo **Tech Challenge**, detalhando o caminho percorrido através da evolução do código (notebooks 01 a 07) e a escolha do modelo campeão para deploy.
 
 ## 1. Restrições e Escopo do Projeto (Tech Challenge - Fase 1)
 O projeto visa demonstrar a aplicação de boas práticas de Engenharia de Machine Learning e MLOps. A evolução deve mimetizar o processo de maturação técnica diretamente no histórico de commits (de scripts modulares simples para MLflow Projects e Docker).
