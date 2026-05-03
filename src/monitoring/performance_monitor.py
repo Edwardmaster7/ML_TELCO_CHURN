@@ -73,6 +73,9 @@ def compute_performance_metrics(
     if not _SKLEARN_AVAILABLE:
         return {}
 
+    if len(y_true) == 0 or len(y_prob) == 0:
+        return {}
+
     y_pred = (y_prob >= threshold).astype(int)
 
     metrics: dict[str, float] = {}
