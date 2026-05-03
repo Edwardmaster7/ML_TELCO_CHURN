@@ -1,4 +1,5 @@
 # src/models/train.py
+import json
 import os
 import argparse
 import logging
@@ -10,6 +11,7 @@ import mlflow.sklearn
 import mlflow.pytorch
 import numpy as np
 import pandas as pd
+from datetime import datetime, timezone
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, average_precision_score
 
@@ -28,6 +30,85 @@ from src.models.trainer import train_focal_model
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
+
+
+def _compute_baseline_stats(
+    X_train_raw: pd.DataFrame,
+    model: torch.nn.Module,
+    device: torch.device,
+    preprocessor,
+    cfg,
+) -> dict:
+    """Computa estatísticas de baseline do conjunto de treino.
+
+    Gera um dicionário com distribuições das features numéricas, proporções das
+    categóricas e distribuição das probabilidades preditas. Salvo como artefato
+    MLflow para servir de referência ao drift detector em produção.
+
+    Args:
+        X_train_raw:  Features de treino pré-processamento (DataFrame original).
+        model:        Modelo PyTorch já treinado.
+        device:       Device para inferência.
+        preprocessor: ColumnTransformer fitado.
+        cfg:          Objeto de configuração (CONFIG).
+
+    Returns:
+        Dicionário com seções ``numerical_features``, ``categorical_features``
+        e ``prediction_distribution``.
+    """
+    stats: dict = {
+        "computed_at": datetime.now(timezone.utc).isoformat(),
+        "run_id": None,  # será preenchido externamente
+        "n_samples": len(X_train_raw),
+        "numerical_features": {},
+        "categorical_features": {},
+        "prediction_distribution": {},
+    }
+
+    num_cols = [c for c in cfg.num_features if c in X_train_raw.columns]
+    cat_cols = [c for c in cfg.cat_features if c in X_train_raw.columns]
+
+    for col in num_cols:
+        series = X_train_raw[col].dropna()
+        counts, edges = np.histogram(series, bins=10)
+        stats["numerical_features"][col] = {
+            "mean": float(series.mean()),
+            "std": float(series.std()),
+            "min": float(series.min()),
+            "q10": float(np.quantile(series, 0.10)),
+            "q25": float(np.quantile(series, 0.25)),
+            "q50": float(np.quantile(series, 0.50)),
+            "q75": float(np.quantile(series, 0.75)),
+            "q90": float(np.quantile(series, 0.90)),
+            "max": float(series.max()),
+            "hist_counts": counts.tolist(),
+            "hist_edges": edges.tolist(),
+        }
+
+    for col in cat_cols:
+        proportions = X_train_raw[col].value_counts(normalize=True).to_dict()
+        stats["categorical_features"][col] = {k: float(v) for k, v in proportions.items()}
+
+    # Distribuição das predições de probabilidade no conjunto de treino
+    try:
+        X_proc = preprocessor.transform(X_train_raw)
+        X_t = torch.tensor(X_proc.astype(np.float32)).to(device)
+        model.eval()
+        with torch.no_grad():
+            probs = torch.sigmoid(model(X_t)).cpu().numpy().flatten()
+        counts_pred, edges_pred = np.histogram(probs, bins=20, range=(0.0, 1.0))
+        stats["prediction_distribution"] = {
+            "mean": float(probs.mean()),
+            "std": float(probs.std()),
+            "q50": float(np.median(probs)),
+            "churn_rate": float((probs >= 0.5).mean()),
+            "hist_counts": counts_pred.tolist(),
+            "hist_edges": edges_pred.tolist(),
+        }
+    except Exception as exc:
+        logger.warning(f"Não foi possível calcular prediction_distribution: {exc}")
+
+    return stats
 
 def main():
     # Desativa log de variáveis de ambiente do MLFlow para limpar output
@@ -221,6 +302,27 @@ def main():
         )
 
         logger.info("Modelo (Focal Loss + K-Fold) e métricas registradas no MLflow.")
+
+        # Computa e loga estatísticas de baseline do treino (referência para drift detection)
+        try:
+            active_run = mlflow.active_run()
+            run_id = active_run.info.run_id if active_run else None
+            baseline_stats = _compute_baseline_stats(
+                X_train_raw=X_train_raw,
+                model=final_model,
+                device=device,
+                preprocessor=preprocessor,
+                cfg=CONFIG,
+            )
+            baseline_stats["run_id"] = run_id
+
+            baseline_path = "training_baseline.json"
+            with open(baseline_path, "w", encoding="utf-8") as fh:
+                json.dump(baseline_stats, fh, ensure_ascii=False, indent=2)
+            mlflow.log_artifact(baseline_path, artifact_path="")
+            logger.info(f"Baseline stats registrado no MLflow: {baseline_path}")
+        except Exception as exc:
+            logger.warning(f"Não foi possível calcular/logar baseline stats: {exc}")
 
 if __name__ == "__main__":
     main()
