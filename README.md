@@ -849,7 +849,8 @@ Veja [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo completo, convenções de b
 
 - **Eduardo Batista** — [eduardoobatista2002@hotmail.com](mailto:eduardoobatista2002@hotmail.com)
 - **Lucas Frederico** — [vonluqi@gmail.com](mailto:vonluqi@gmail.com)
-
+- **Pedro Henrique Siqueira Lopes** — [pedroppzs01@gmail.com](mailto:pedroppzs01@gmail.com)
+- **Victor Kenji Tamanaha Murad** — [victorkmurad@gmail.com](mailto:victorkmurad@gmail.com)
 ---
 
 ## Licença
