@@ -39,8 +39,16 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         latency_ms = round((time.time() - start_time) * 1000, 2)
 
+        log_message = (
+            "http_request "
+            f"method={request.method} "
+            f"path={request.url.path} "
+            f"status={response.status_code} "
+            f"latency={latency_ms}ms"
+        )
+
         logger.info(
-            "http_request",
+            log_message,
             extra={
                 "request_id": correlation_id,
                 "method": request.method,
