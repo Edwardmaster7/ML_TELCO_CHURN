@@ -31,6 +31,10 @@ COPY --from=builder /app/.venv /app/.venv
 COPY src /app/src
 COPY notebooks/data/raw /app/notebooks/data/raw
 
+# Embutir artefatos do MLflow (modelo + registry)
+COPY mlruns /app/mlruns
+COPY mlflow.db /app/mlflow.db
+
 # Expor porta da API
 EXPOSE 8000
 

@@ -12,3 +12,6 @@ mlartifacts
 .superpowers
 .worktrees/
 mlflow.db
+
+# Documento de contexto para IA — não versionado
+docs/PROJECT_CONTEXT.md

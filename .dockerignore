@@ -27,8 +27,6 @@ MANIFEST
 .cursor/
 .vscode/
 .idea/
-mlruns/
-mlflow.db
 tests/
 notebooks/
 docs/
