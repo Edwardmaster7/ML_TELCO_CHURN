@@ -16,12 +16,12 @@ Pipeline completo de ML end-to-end: do EDA ao serving em produção com FastAPI 
 
 **Solução:** Classificador binário que prevê a probabilidade de churn de cada cliente, permitindo campanhas de retenção proativas.
 
-| Campo | Valor |
-|---|---|
-| Dataset | [IBM Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn) (~7 043 clientes, 3 CSVs) |
-| Modelo | `MLP_Focal_KFold_Script` — MLP PyTorch com Focal Loss + StratifiedKFold(3) |
-| Métrica primária | PR-AUC = **0.6539** (holdout de 20%) |
-| Serving | FastAPI + MLflow Model Registry — alias `@production` |
+| Campo              | Valor                                                                                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| Dataset            | [IBM Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn) (~7 043 clientes, 3 CSVs) |
+| Modelo             | `MLP_Focal_KFold_Script` — MLP PyTorch com Focal Loss + StratifiedKFold(3)                                     |
+| Métrica primária | PR-AUC =**0.6539** (holdout de 20%)                                                                         |
+| Serving            | FastAPI + MLflow Model Registry — alias `@production`                                                          |
 
 ---
 
@@ -50,25 +50,24 @@ flowchart LR
 
 ## Stack Tecnológica
 
-| Camada | Tecnologia | Versão mínima |
-|---|---|---|
-| Linguagem | Python | ≥ 3.13 |
-| Deep Learning | PyTorch | ≥ 2.11.0 |
-| Preprocessamento | Scikit-Learn | ≥ 1.8.0 |
-| Hyperparameter Tuning | Optuna | ≥ 4.8.0 |
-| MLOps / Registry | MLflow | 3.11.1 |
-| API Framework | FastAPI | ≥ 0.135.2 |
-| ASGI Server | Uvicorn | ≥ 0.42.0 |
-| Gerenciamento de deps | uv | qualquer |
-| Containerização | Docker + Compose | — |
-| Lint / Format | Ruff | ≥ 0.15.7 |
-| Testes | Pytest + Pandera | ≥ 9.0.2 |
+| Camada                | Tecnologia       | Versão mínima |
+| --------------------- | ---------------- | --------------- |
+| Linguagem             | Python           | ≥ 3.13         |
+| Deep Learning         | PyTorch          | ≥ 2.11.0       |
+| Preprocessamento      | Scikit-Learn     | ≥ 1.8.0        |
+| Hyperparameter Tuning | Optuna           | ≥ 4.8.0        |
+| MLOps / Registry      | MLflow           | 3.11.1          |
+| API Framework         | FastAPI          | ≥ 0.135.2      |
+| ASGI Server           | Uvicorn          | ≥ 0.42.0       |
+| Gerenciamento de deps | uv               | qualquer        |
+| Containerização     | Docker + Compose | —              |
+| Lint / Format         | Ruff             | ≥ 0.15.7       |
+| Testes                | Pytest + Pandera | ≥ 9.0.2        |
 
 ---
 
 ## Estrutura do Repositório
 
-```
 ML_TELCO_CHURN/
 │
 ├── src/                          # Código de produção
@@ -81,16 +80,22 @@ ML_TELCO_CHURN/
 │   │   ├── ml_service.py         # Singleton MLService — carrega artefatos MLflow
 │   │   ├── middlewares.py        # LoggingMiddleware (method/path/status/latency)
 │   │   ├── database.py           # Engine AsyncSQLAlchemy (aiosqlite)
-│   │   └── deps.py               # Injeção de dependências (get_db)
+│   │   ├── deps.py               # Injeção de dependências (get_db)
+│   │   └── logging_config.py     # Configuração de logs JSON estruturados
 │   ├── data/
 │   │   └── loader.py             # load_and_merge_data() — merge dos 3 CSVs
 │   ├── features/
 │   │   ├── pipeline.py           # clean_data(), get_preprocessor(), prepare_target()
 │   │   └── build_features.py     # Utilitários de features derivadas
-│   └── models/
-│       ├── architectures.py      # ChurnMLP (nn.Module) + FocalLoss
-│       ├── train.py              # Script de treino end-to-end (CLI via argparse)
-│       └── trainer.py            # train_focal_model() — AdamW + OneCycleLR + EarlyStopping
+│   ├── models/
+│   │   ├── architectures.py      # ChurnMLP (nn.Module) + FocalLoss
+│   │   ├── train.py              # Script de treino end-to-end (CLI via argparse)
+│   │   └── trainer.py            # train_focal_model() — AdamW + OneCycleLR + EarlyStopping
+│   └── monitoring/
+│       ├── alert_check.py        # Verificação consolidada de alertas
+│       ├── drift_detector.py     # Detecção de drift (PSI/KS/JSD)
+│       ├── metrics.py            # Métricas Prometheus exportadas
+│       └── performance_monitor.py # Avaliador de performance (PR-AUC, F1, etc)
 │
 ├── notebooks/                    # Exploração e desenvolvimento iterativo
 │   ├── 01_eda_feature_engineering.ipynb
@@ -112,12 +117,17 @@ ML_TELCO_CHURN/
 │   │   ├── test_ml_service.py
 │   │   ├── test_schemas.py
 │   │   └── test_schema_pandera.py
-│   └── features/
-│       └── test_pipeline.py
+│   ├── features/
+│   │   └── test_pipeline.py
+│   └── monitoring/
+│       ├── test_alert_check.py
+│       ├── test_drift_detector.py
+│       └── test_performance_monitor.py
 │
 ├── docs/                         # Documentação técnica
 │   ├── MODEL_CARD.md             # Model Card completo (performance, limitações, uso)
 │   ├── DEPLOYMENT_ARCHITECTURE.md  # Arquitetura de deploy + diagramas Mermaid
+│   ├── DOCKER_WORKFLOW.md
 │   ├── MONITORING_PLAN.md        # Plano de monitoramento e detecção de drift
 │   ├── tech_challenge_decisions.md # Narrativa histórica de decisões do projeto
 │   ├── plans/                    # Planos de iteração (por data)
@@ -133,7 +143,6 @@ ML_TELCO_CHURN/
 ├── Makefile                      # Comandos de dev: test, train, run, mlflowui, db-upgrade
 ├── pyproject.toml                # Dependências + configuração Ruff + Hatch
 └── README.md
-```
 
 > **Notebooks vs. Scripts:** Use os notebooks para exploração, EDA e prototipagem. Para treinar o modelo oficial e registrá-lo no MLflow (reproduzível), use sempre `src/models/train.py` via `make train`.
 
@@ -141,12 +150,12 @@ ML_TELCO_CHURN/
 
 ## Pré-requisitos
 
-| Ferramenta       | Versão   | Instalação                                                                                              |
-| ---------------- | -------- | -------------------------------------------------------------------------------------------------------- |
-| Python           | ≥ 3.13  | [python.org](https://www.python.org/)                                                                    |
-| uv               | qualquer | Linux/macOS: `curl -LsSf https://astral.sh/uv/install.sh \| sh` · Windows: veja abaixo               |
-| Docker + Compose | qualquer | [docker.com](https://www.docker.com/) (opcional, para deploy containerizado)                             |
-| Make             | qualquer | Pré-instalado em Linux/macOS; Windows: [GnuWin32](http://gnuwin32.sourceforge.net/packages/make.htm), [Git Bash](https://git-scm.com/download/win) ou WSL2 |
+| Ferramenta       | Versão  | Instalação                                                                                                                                         |
+| ---------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Python           | ≥ 3.13  | [python.org](https://www.python.org/)                                                                                                                   |
+| uv               | qualquer | Linux/macOS:`curl -LsSf https://astral.sh/uv/install.sh \| sh` · Windows: veja abaixo                                                              |
+| Docker + Compose | qualquer | [docker.com](https://www.docker.com/) (opcional, para deploy containerizado)                                                                            |
+| Make             | qualquer | Pré-instalado em Linux/macOS; Windows:[GnuWin32](http://gnuwin32.sourceforge.net/packages/make.htm), [Git Bash](https://git-scm.com/download/win) ou WSL2 |
 
 **Instalando o `uv` no Windows (PowerShell):**
 
@@ -266,37 +275,37 @@ O script de treino é `src/models/train.py`, executado via `Makefile`:
 # Treino padrão (5 épocas — rápido para validar o pipeline)
 make train
 
-# Treino completo para produção (150 épocas)
-make train ARGS="--epochs 150"
+# Treino completo para produção (400 épocas)
+make train EPOCHS=400
 
 # Com caminhos personalizados para os CSVs
-make train ARGS="--epochs 150 \
+make train ARGS="--epochs 400 \
   --customers notebooks/data/raw/churn_customers.csv \
   --services  notebooks/data/raw/churn_services.csv \
   --contracts notebooks/data/raw/churn_contracts.csv"
 ```
 
-#### Comandos equivalentes sem `make` (Windows PowerShell) {#comandos-equivalentes-sem-make-windows}
+#### Comandos equivalentes sem `make` (Windows PowerShell)
 
 ```powershell
 # Inicializar banco MLflow (uma vez)
 uv run mlflow db upgrade sqlite:///mlflow.db
 
-# Treino padrão (5 épocas)
+# Treino debug (5 épocas)
 $env:MLFLOW_TRACKING_URI="sqlite:///mlflow.db"; $env:PYTHONPATH="."; uv run python src/models/train.py --epochs 5
 
-# Treino completo para produção (150 épocas)
-$env:MLFLOW_TRACKING_URI="sqlite:///mlflow.db"; $env:PYTHONPATH="."; uv run python src/models/train.py --epochs 150
+# Treino completo para produção (400 épocas)
+$env:MLFLOW_TRACKING_URI="sqlite:///mlflow.db"; $env:PYTHONPATH="."; uv run python src/models/train.py --epochs 400
 ```
 
 **Argumentos CLI disponíveis (`src/models/train.py`):**
 
-| Argumento       | Padrão                                    | Descrição                                          |
-| --------------- | ------------------------------------------ | ---------------------------------------------------- |
-| `--customers` | `notebooks/data/raw/churn_customers.csv` | CSV de dados demográficos                           |
-| `--services`  | `notebooks/data/raw/churn_services.csv`  | CSV de serviços contratados                         |
-| `--contracts` | `notebooks/data/raw/churn_contracts.csv` | CSV de contratos e target                            |
-| `--epochs`    | `5`                                      | Número máximo de épocas (use 150 para produção) |
+| Argumento       | Padrão                                    | Descrição                                                       |
+| --------------- | ------------------------------------------ | ----------------------------------------------------------------- |
+| `--customers` | `notebooks/data/raw/churn_customers.csv` | CSV de dados demográficos                                        |
+| `--services`  | `notebooks/data/raw/churn_services.csv`  | CSV de serviços contratados                                      |
+| `--contracts` | `notebooks/data/raw/churn_contracts.csv` | CSV de contratos e target                                         |
+| `--epochs`    | `5`                                      | Número máximo de épocas (use entre 300 e 500 para produção) |
 
 **O que o treino faz:**
 
@@ -312,11 +321,13 @@ $env:MLFLOW_TRACKING_URI="sqlite:///mlflow.db"; $env:PYTHONPATH="."; uv run pyth
 > Após o treino, **atribua o alias `@production`** à nova versão para que a API possa carregá-la:
 >
 > **Opção A — CLI MLflow (Linux/macOS/Windows):**
+>
 > ```bash
 > uv run mlflow models set-alias --name MLP_Focal_KFold_Script --alias production --model-version <N>
 > ```
 >
 > **Opção B — Python SDK (recomendado, funciona em qualquer OS):**
+>
 > ```python
 > # Execute com: uv run python -c "..."  ou em um shell Python
 > import mlflow
@@ -329,6 +340,7 @@ $env:MLFLOW_TRACKING_URI="sqlite:///mlflow.db"; $env:PYTHONPATH="."; uv run pyth
 > ```
 >
 > **PowerShell (Windows — one-liner):**
+>
 > ```powershell
 > $env:MLFLOW_TRACKING_URI="sqlite:///mlflow.db"; $env:PYTHONPATH="."; uv run python -c "import mlflow; mlflow.set_tracking_uri('sqlite:///mlflow.db'); c=mlflow.tracking.MlflowClient(); v=c.get_latest_versions('MLP_Focal_KFold_Script')[0].version; c.set_registered_model_alias('MLP_Focal_KFold_Script','production',v); print('Alias production setado para versão',v)"
 > ```
@@ -448,15 +460,17 @@ Invoke-RestMethod -Uri "http://localhost:8000/api/v1/predict" `
 
 **Variáveis de ambiente da API:**
 
-| Variável               | Padrão                    | Descrição                                   |
-| ----------------------- | -------------------------- | --------------------------------------------- |
-| `MODEL_NAME`          | `MLP_Focal_KFold_Script` | Nome do modelo no MLflow Registry             |
-| `MODEL_STAGE`         | `production`             | Alias de versão a carregar                   |
-| `MLFLOW_TRACKING_URI` | `sqlite:///mlflow.db`    | URI do MLflow tracking server                 |
-| `CORS_ORIGINS`        | `*`                      | Origens permitidas (restringir em produção) |
+| Variável               | Padrão                           | Descrição                                    |
+| ----------------------- | --------------------------------- | ---------------------------------------------- |
+| `MODEL_NAME`          | `MLP_Focal_KFold_Script`        | Nome do modelo no MLflow Registry              |
+| `MODEL_STAGE`         | `production`                    | Alias de versão a carregar                    |
+| `MLFLOW_TRACKING_URI` | `sqlite:///mlflow.db`           | URI do MLflow tracking server                  |
+| `CORS_ORIGINS`        | `*`                             | Origens permitidas (restringir em produção)  |
 | `DATABASE_URL`        | `sqlite+aiosqlite:///mlflow.db` | URL do banco de dados assíncrono (SQLAlchemy) |
 
 ### Docker
+
+> Consulte **docs/DOCKER_WORKFLOW.md** para detalhes completos do fluxo de treinamento e deploy via Docker.
 
 ```bash
 # Build e deploy completo (MLflow na porta 5000, API na porta 8000)
@@ -499,16 +513,17 @@ Invoke-RestMethod -Uri "http://localhost:8000/api/v1/predict" `
 ### Stack de Observabilidade
 
 Suba a stack completa com:
+
 ```bash
 docker compose up --build
 ```
 
-| Serviço | URL | Descrição |
-|---|---|---|
-| API FastAPI | `http://localhost:8000` | Inferência e endpoints de monitoramento |
-| MLflow UI | `http://localhost:5000` | Tracking de experimentos e Model Registry |
-| Prometheus | `http://localhost:9090` | Coleta de métricas (scrape a cada 15s) |
-| Grafana | `http://localhost:3000` | Dashboards (usuário: `admin` / senha: `admin`) |
+| Serviço    | URL                       | Descrição                                        |
+| ----------- | ------------------------- | -------------------------------------------------- |
+| API FastAPI | `http://localhost:8000` | Inferência e endpoints de monitoramento           |
+| MLflow UI   | `http://localhost:5000` | Tracking de experimentos e Model Registry          |
+| Prometheus  | `http://localhost:9090` | Coleta de métricas (scrape a cada 15s)            |
+| Grafana     | `http://localhost:3000` | Dashboards (usuário:`admin` / senha: `admin`) |
 
 ### Endpoints de Monitoramento
 
@@ -524,6 +539,7 @@ curl -X POST "http://localhost:8000/api/v1/feedback/7590-VHVEG?actual_churn=1"
 ```
 
 **Exemplo de resposta `/health`:**
+
 ```json
 {
   "status": "ok",
@@ -556,6 +572,7 @@ python -m src.monitoring.alert_check --health-url http://localhost:8000/health -
 ```
 
 Relatórios são salvos em:
+
 - `monitoring/reports/drift/` — relatórios PSI/KS/JSD por feature
 - `monitoring/reports/performance/` — PR-AUC/F1 por janela de tempo
 - `monitoring/reports/alerts/` — resumo de alertas ativos
@@ -738,6 +755,9 @@ uv run pytest tests/ -v
 | `tests/api/test_schemas.py`        | Validação dos schemas Pydantic                            |
 | `tests/api/test_schema_pandera.py` | Validação de schema de saída com Pandera                 |
 | `tests/features/test_pipeline.py`  | Pipeline de features (`clean_data`, `get_preprocessor`) |
+| `tests/monitoring/test_alert_check.py` | Testes do script de verificação de alertas               |
+| `tests/monitoring/test_drift_detector.py` | Testes de detecção de drift nas features               |
+| `tests/monitoring/test_performance_monitor.py` | Testes do avaliador de performance (PR-AUC, etc.)       |
 
 ### Pré-commit (não configurado)
 
@@ -753,23 +773,23 @@ uv run ruff check src/ tests/ && uv run pytest tests/ -v
 
 ### Windows (PowerShell)
 
-| Sintoma | Causa | Solução |
-|---|---|---|
-| `make train` falha com erro de variável de ambiente | `make` do GnuWin32 não processa `VAR=value cmd` inline | Use Git Bash, WSL2, ou os [comandos PowerShell equivalentes](#comandos-equivalentes-sem-make-windows) |
-| `curl: (3) URL rejected` ou sem resposta | O `curl` do PowerShell é alias de `Invoke-WebRequest` | Use `curl.exe` explicitamente ou `Invoke-RestMethod` |
-| `uv` não reconhecido após instalação | PATH não atualizado na sessão atual | Feche e reabra o PowerShell; ou execute `. $PROFILE` |
-| `docker compose up --build` falha com `COPY mlflow.db` | `mlflow.db` não existe localmente (excluído pelo `.gitignore`) | Execute `make train` (ou o comando PowerShell equivalente) para gerar `mlflow.db` antes do build |
-| `uv run pytest` falha com `ModuleNotFoundError` | `PYTHONPATH` não inclui a raiz do projeto | Prefixe com `$env:PYTHONPATH="."; uv run pytest tests/ -v` |
-| Encoding UTF-8 em logs ou CSVs | PowerShell usa CP1252 por padrão em alguns contextos | Adicione `$OutputEncoding = [Console]::OutputEncoding = [Text.Encoding]::UTF8` no início da sessão |
+| Sintoma                                                    | Causa                                                                | Solução                                                                                              |
+| ---------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `make train` falha com erro de variável de ambiente     | `make` do GnuWin32 não processa `VAR=value cmd` inline          | Use Git Bash, WSL2, ou os[comandos PowerShell equivalentes](#comandos-equivalentes-sem-make-windows)      |
+| `curl: (3) URL rejected` ou sem resposta                 | O `curl` do PowerShell é alias de `Invoke-WebRequest`           | Use `curl.exe` explicitamente ou `Invoke-RestMethod`                                               |
+| `uv` não reconhecido após instalação                 | PATH não atualizado na sessão atual                                | Feche e reabra o PowerShell; ou execute `. $PROFILE`                                                 |
+| `docker compose up --build` falha com `COPY mlflow.db` | `mlflow.db` não existe localmente (excluído pelo `.gitignore`) | Execute `make train` (ou o comando PowerShell equivalente) para gerar `mlflow.db` antes do build   |
+| `uv run pytest` falha com `ModuleNotFoundError`        | `PYTHONPATH` não inclui a raiz do projeto                         | Prefixe com `$env:PYTHONPATH="."; uv run pytest tests/ -v`                                           |
+| Encoding UTF-8 em logs ou CSVs                             | PowerShell usa CP1252 por padrão em alguns contextos                | Adicione `$OutputEncoding = [Console]::OutputEncoding = [Text.Encoding]::UTF8` no início da sessão |
 
 ### Linux / macOS (bash)
 
-| Sintoma | Causa | Solução |
-|---|---|---|
-| `uv: command not found` após instalação | `~/.cargo/bin` ou `~/.local/bin` não está no PATH | Execute `source $HOME/.local/bin/env` ou adicione ao `~/.bashrc` / `~/.zshrc` |
-| `make train` falha com `Permission denied` no SQLite | `mlflow.db` não existe e diretório sem permissão de escrita | Execute `make db-upgrade` ou `uv run mlflow db upgrade sqlite:///mlflow.db` |
-| `ImportError: torch` ao rodar o treino | PyTorch não instalado no venv | Execute `uv sync` para sincronizar todas as dependências |
-| `docker compose` não encontrado (só funciona `docker-compose`) | Docker Compose V1 instalado | Atualize para Docker Compose V2: `docker compose` (sem hífen) |
+| Sintoma                                                              | Causa                                                            | Solução                                                                           |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `uv: command not found` após instalação                         | `~/.cargo/bin` ou `~/.local/bin` não está no PATH          | Execute `source $HOME/.local/bin/env` ou adicione ao `~/.bashrc` / `~/.zshrc` |
+| `make train` falha com `Permission denied` no SQLite             | `mlflow.db` não existe e diretório sem permissão de escrita | Execute `make db-upgrade` ou `uv run mlflow db upgrade sqlite:///mlflow.db`     |
+| `ImportError: torch` ao rodar o treino                             | PyTorch não instalado no venv                                   | Execute `uv sync` para sincronizar todas as dependências                         |
+| `docker compose` não encontrado (só funciona `docker-compose`) | Docker Compose V1 instalado                                      | Atualize para Docker Compose V2:`docker compose` (sem hífen)                     |
 
 ---
 
@@ -805,21 +825,21 @@ Veja [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo completo, convenções de b
 
 ## Roadmap
 
-| Status | Item |
-|---|---|
-| ✅ | EDA + ML Canvas + Baselines Scikit-Learn |
-| ✅ | MLP PyTorch com Focal Loss + Optuna + KFold |
-| ✅ | Feature engineering avançada (6 features derivadas) |
-| ✅ | Refatoração modular em `src/` com testes Pytest |
-| ✅ | API FastAPI com validação Pydantic + MLflow Registry |
-| ✅ | Containerização Docker multi-stage + Docker Compose |
-| ✅ | Model Card, Arquitetura de Deploy e Plano de Monitoramento |
-| ✅ | Observabilidade: logging JSON, Prometheus, Grafana |
-| ✅ | Feedback loop (`POST /api/v1/feedback/{customer_id}`) |
-| ✅ | Drift detection (PSI, KS, chi-square, JSD) |
-| 🔲 | Correção do bug `is_high_spender` (q75 fixo do treino) |
-| 🔲 | GitHub Actions CI (lint + test + build) |
-| 🔲 | DVC para versionamento de dados |
+| Status | Item                                                       |
+| ------ | ---------------------------------------------------------- |
+| ✅     | EDA + ML Canvas + Baselines Scikit-Learn                   |
+| ✅     | MLP PyTorch com Focal Loss + Optuna + KFold                |
+| ✅     | Feature engineering avançada (6 features derivadas)       |
+| ✅     | Refatoração modular em `src/` com testes Pytest        |
+| ✅     | API FastAPI com validação Pydantic + MLflow Registry     |
+| ✅     | Containerização Docker multi-stage + Docker Compose      |
+| ✅     | Model Card, Arquitetura de Deploy e Plano de Monitoramento |
+| ✅     | Observabilidade: logging JSON, Prometheus, Grafana         |
+| ✅     | Feedback loop (`POST /api/v1/feedback/{customer_id}`)    |
+| ✅     | Drift detection (PSI, KS, chi-square, JSD)                 |
+| 🔲     | Correção do bug `is_high_spender` (q75 fixo do treino) |
+| 🔲     | GitHub Actions CI (lint + test + build)                    |
+| 🔲     | DVC para versionamento de dados                            |
 
 ---
 

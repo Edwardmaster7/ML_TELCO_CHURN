@@ -20,10 +20,12 @@ Este arquivo serve como base para orientar o desenvolvimento e as interações c
 
 ### 2. Estrutura de Diretórios
 - Todo o código refatorado de produção deve ficar restrito às pastas modulares dentro do diretório `src/`:
+  - `src/core/` - Configurações, middlewares, schemas e dependências centrais
   - `src/data/` - Ingestão e manipulação de dados
   - `src/features/` - Engenharia de features e pré-processamento
   - `src/models/` - Treinamento, avaliação e definições de modelos
   - `src/api/` - Código relacionado à inferência e endpoints da API
+  - `src/monitoring/` - Observabilidade, métricas e detecção de drift
 
 ### 3. Serving de Inferência
 - A inferência em produção/API será servida utilizando o framework **FastAPI**.
@@ -40,6 +42,7 @@ Este arquivo serve como base para orientar o desenvolvimento e as interações c
   - `docs/specs/`
   - `docs/specs/adrs/` (Para Architecture Decision Records)
   - `docs/plans/`
+  - `docs/reports/` (Para relatórios de experimentos e análises)
 - **Decisões Técnicas:** Utilize o formato **ADR (Architecture Decision Record)** para registrar escolhas arquiteturais ou de modelagem significativas. Um ADR é um documento curto (~1 página) que registra o contexto, a decisão tomada e as alternativas consideradas/trade-offs (Ex: *ADR-001: Escolhemos usar MLP em vez de XGBoost porque...*).
 - **Relatório Consolidado:** Mantenha as atualizações macro do histórico do projeto no arquivo global de narrativa `docs/tech_challenge_decisions.md`.
 - *Nota: É terminantemente proibida a criação ou o uso de pastas não-padronizadas (ex: não usar `docs/superpowers`).*
