@@ -303,6 +303,17 @@ def main():
 
         logger.info("Modelo (Focal Loss + K-Fold) e métricas registradas no MLflow.")
 
+        # Configurar alias 'production' para o modelo registrado
+        try:
+            client = mlflow.tracking.MlflowClient(tracking_uri)
+            versions = client.search_model_versions('name="MLP_Focal_KFold_Script"')
+            if versions:
+                latest_version = sorted(versions, key=lambda x: int(x.version))[-1]
+                client.set_registered_model_alias("MLP_Focal_KFold_Script", "production", latest_version.version)
+                logger.info(f"Alias 'production' configurado para versão {latest_version.version}")
+        except Exception as exc:
+            logger.warning(f"Não foi possível configurar alias 'production': {exc}")
+
         # Computa e loga estatísticas de baseline do treino (referência para drift detection)
         try:
             active_run = mlflow.active_run()
