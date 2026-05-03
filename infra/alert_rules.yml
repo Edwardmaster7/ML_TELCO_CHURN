@@ -1,0 +1,60 @@
+groups:
+  - name: telco_churn_api_alerts
+    interval: 30s
+    rules:
+
+      # ── Modelo não carregado ──────────────────────────────────────────────
+      - alert: ModelNotLoaded
+        expr: ml_model_loaded == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Modelo de churn não está carregado"
+          description: "O artefato MLflow não foi carregado há mais de 2 minutos. Verifique o Lifespan da API."
+
+      # ── Taxa de erros 5xx alta ───────────────────────────────────────────
+      - alert: HighErrorRate5xx
+        expr: |
+          sum(rate(http_requests_total{status_code=~"5.."}[5m])) /
+          sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Taxa de erros 5xx acima de 5%"
+          description: "A API está retornando mais de 5% de erros 5xx nos últimos 5 minutos."
+
+      # ── Latência alta ────────────────────────────────────────────────────
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{handler="/api/v1/predict"}[5m]))
+            by (le)
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 de latência do /predict acima de 2s"
+          description: "O percentil 95 da latência no endpoint /predict ultrapassou 2 segundos."
+
+      # ── Falhas de validação de payload ───────────────────────────────────
+      - alert: HighValidationFailureRate
+        expr: rate(prediction_validation_failures_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alta taxa de falhas de validação (422)"
+          description: "Mais de 0.1 req/s estão resultando em erros de validação 422."
+
+      # ── API indisponível ─────────────────────────────────────────────────
+      - alert: ApiDown
+        expr: up{job="telco-churn-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API de churn está indisponível"
+          description: "O job Prometheus não consegue fazer scrape da API há mais de 1 minuto."
