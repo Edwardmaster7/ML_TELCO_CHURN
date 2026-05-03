@@ -28,5 +28,6 @@ MANIFEST
 .vscode/
 .idea/
 tests/
-notebooks/
 docs/
+mlruns/
+mlflow.db

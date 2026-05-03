@@ -1,5 +1,7 @@
 # Estágio de build com uv
-FROM ghcr.io/astral-sh/uv:python3.13-slim AS builder
+FROM python:3.13-slim AS builder
+
+RUN pip install uv
 
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
@@ -10,8 +12,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 # Instalar dependências sem o projeto (cache layer)
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-install-project --no-dev
+RUN uv sync --frozen --no-install-project --no-dev
 
 # Estágio final de execução
 FROM python:3.13-slim
@@ -27,13 +28,10 @@ ENV PYTHONPATH="/app"
 # Copiar ambiente virtual do builder
 COPY --from=builder /app/.venv /app/.venv
 
-# Copiar o código fonte e dados necessários
+# Copiar o código fonte, scripts e dados necessários
 COPY src /app/src
+COPY scripts /app/scripts
 COPY notebooks/data/raw /app/notebooks/data/raw
-
-# Embutir artefatos do MLflow (modelo + registry)
-COPY mlruns /app/mlruns
-COPY mlflow.db /app/mlflow.db
 
 # Expor porta da API
 EXPOSE 8000
