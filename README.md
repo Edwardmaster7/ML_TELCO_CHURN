@@ -67,7 +67,7 @@ flowchart LR
 ---
 
 ## Estrutura do Repositório
-
+```
 ML_TELCO_CHURN/
 │
 ├── src/                          # Código de produção
@@ -143,7 +143,7 @@ ML_TELCO_CHURN/
 ├── Makefile                      # Comandos de dev: test, train, run, mlflowui, db-upgrade
 ├── pyproject.toml                # Dependências + configuração Ruff + Hatch
 └── README.md
-
+```
 > **Notebooks vs. Scripts:** Use os notebooks para exploração, EDA e prototipagem. Para treinar o modelo oficial e registrá-lo no MLflow (reproduzível), use sempre `src/models/train.py` via `make train`.
 
 ---
